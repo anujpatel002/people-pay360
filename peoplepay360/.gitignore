@@ -37,3 +37,25 @@ coverage/
 
 # Docker volumes (local data)
 docker/data/
+
+# Electron
+electron/dist/
+electron/out/
+electron/.webpack/
+electron/release/
+*.app
+*.dmg
+*.exe
+*.deb
+*.rpm
+*.snap
+*.AppImage
+*.blockmap
+*.nsis
+*.pkg
+*.zip
+*.tar.gz
+.webpack/
+app-update.yml
+builder-debug.yml
+builder-effective-config.yaml

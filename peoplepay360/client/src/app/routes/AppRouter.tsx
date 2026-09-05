@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import UsersListPage from '@/features/users/pages/UsersListPage';
 import UserFormPage from '@/features/users/pages/UserFormPage';
+import ScheduleListPage from '@/features/working-schedules/pages/ScheduleListPage';
+import ScheduleFormPage from '@/features/working-schedules/pages/ScheduleFormPage';
 import ProtectedRoute from './ProtectedRoute';
 import EmployeeKanbanPage from '@/features/employees/pages/EmployeeKanbanPage';
 import EmployeeFormPage from '@/features/employees/pages/EmployeeFormPage';
@@ -17,6 +19,8 @@ export default function AppRouter() {
           <Route path="/dashboard" element={<div>Dashboard (coming soon)</div>} />
           <Route path="/users" element={<UsersListPage />} />
           <Route path="/users/:id" element={<UserFormPage />} />
+          <Route path="/working-schedules" element={<ScheduleListPage />} />
+          <Route path="/working-schedules/:id" element={<ScheduleFormPage />} />
           <Route path="/employees" element={<EmployeeKanbanPage />} />
           <Route path="/employees/:id" element={<EmployeeFormPage />} />
           <Route path="/contracts" element={<ContractListPage />} />
