@@ -1,0 +1,15 @@
+import { Router, RequestHandler } from 'express';
+import { authMiddleware } from '../../../middleware/auth.middleware';
+import { requireRoles } from '../../../middleware/role-guard.middleware';
+import * as c from '../controllers/payroll.controller';
+const router=Router(); const h=(fn:Function)=>fn as unknown as RequestHandler;
+const USER=['HR Payroll User','HR Payroll Manager','Admin'] as const; const MANAGER=['HR Payroll Manager','Admin'] as const;
+router.use(authMiddleware as unknown as RequestHandler);
+router.get('/payruns',requireRoles(...USER) as any,h(c.listPayruns)); router.post('/payruns',requireRoles(...USER) as any,h(c.createPayrun));
+router.get('/payruns/:id',requireRoles(...USER) as any,h(c.getPayrun)); router.post('/payruns/:id/compute',requireRoles(...USER) as any,h(c.compute)); router.post('/payruns/:id/recompute',requireRoles(...USER) as any,h(c.recompute));
+router.post('/payruns/:id/validate',requireRoles(...MANAGER) as any,h(c.validate)); router.post('/payruns/:id/mark-paid',requireRoles(...MANAGER) as any,h(c.markPaid)); router.post('/payruns/:id/send',requireRoles(...MANAGER) as any,h(c.send)); router.get('/payruns/:id/payments',requireRoles(...MANAGER) as any,h(c.listPayments));router.get('/payruns/:id/delivery',requireRoles(...USER) as any,h(c.listDelivery));router.post('/payruns/:id/delivery/retry',requireRoles(...MANAGER) as any,h(c.retryDelivery));
+router.get('/payruns/:id/inputs',requireRoles(...USER) as any,h(c.getInputs));router.post('/payruns/:id/inputs',requireRoles(...USER) as any,h(c.addInput));router.get('/payruns/:id/warnings',requireRoles(...USER) as any,h(c.getWarnings));
+router.post('/warnings/:id/resolve',requireRoles(...MANAGER) as any,h(c.resolveWarning));router.get('/payslips',requireRoles(...USER) as any,h(c.listPayslips));router.get('/payslips/:id/pdf',requireRoles(...USER) as any,h(c.getPayslipPdf));router.get('/payslips/:id',requireRoles(...USER) as any,h(c.getPayslip));
+router.patch('/inputs/:id',requireRoles(...USER) as any,h(c.updateInput));router.delete('/inputs/:id',requireRoles(...USER) as any,h(c.deleteInput));
+router.get('/periods',requireRoles(...USER) as any,h(c.listPeriods));router.post('/periods',requireRoles(...MANAGER) as any,h(c.createPeriod));
+export default router;

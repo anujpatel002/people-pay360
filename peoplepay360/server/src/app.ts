@@ -11,6 +11,7 @@ import workingSchedulesRoutes from './modules/working-schedules/routes/working-s
 import payrollConfigRoutes from './modules/payroll-config/routes/payroll-config.routes';
 import attendanceRoutes from './modules/attendance/routes/attendance.routes';
 import timeOffRoutes from './modules/time-off/routes/time-off.routes';
+import payrollRoutes from './modules/payroll/routes/payroll.routes';
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/api/working-schedules', workingSchedulesRoutes);
 app.use('/api/payroll-config', payrollConfigRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/time-off', timeOffRoutes);
+app.use('/api/payroll', payrollRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));

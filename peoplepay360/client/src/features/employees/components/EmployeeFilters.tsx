@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { EmployeeFilters, EmployeeStatus, EmploymentType } from '../types/employee.types';
 
 interface Props {
@@ -6,12 +7,38 @@ interface Props {
 }
 
 export default function EmployeeFiltersBar({ filters, onChange }: Props) {
+  // 1. Local state to keep the input text highly responsive
+  const [searchTerm, setSearchTerm] = useState(filters.search ?? '');
+
+  // 2. Sync local state if the parent filters.search changes from the outside
+  useEffect(() => {
+    setSearchTerm(filters.search ?? '');
+  }, [filters.search]);
+
+  // 3. Debounce Effect: Wait for typing to stop before triggering parent onChange
+  useEffect(() => {
+    // Set a threshold time of 400 milliseconds
+    const handler = setTimeout(() => {
+      // Only call onChange if the value actually changed from the parent filter value
+      if (searchTerm !== (filters.search ?? '')) {
+        onChange({ search: searchTerm || undefined });
+      }
+    }, 400);
+
+    // If the user types another character before 400ms passes, 
+    // this cleanup function runs and resets the timer!
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm, onChange, filters.search]);
+
   return (
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+      {/* Search Input using local state for typing */}
       <input
         placeholder="Search employees..."
-        value={filters.search ?? ''}
-        onChange={(e) => onChange({ search: e.target.value || undefined })}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
         style={{ padding: '6px 10px', border: '1px solid #d1d5db', borderRadius: 6, minWidth: 200 }}
       />
 
