@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const EMPLOYMENT_TYPE = ['full_time', 'part_time', 'contractor'] as const;
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 export const createEmployeeSchema = z.object({
   firstName:              z.string().min(1, 'First name is required'),
@@ -18,7 +19,7 @@ export const createEmployeeSchema = z.object({
   companyId:              z.string().optional(),
   location:               z.string().optional(),
   scheduleId:             z.string().optional(),
-  hireDate:               z.string().min(1, 'Hire date is required'),
+  hireDate:               z.string().regex(DATE_ONLY, 'Hire date must use YYYY-MM-DD format'),
   bankAccount:            z.string().optional(),
   iban:                   z.string().optional(),
   swift:                  z.string().optional(),

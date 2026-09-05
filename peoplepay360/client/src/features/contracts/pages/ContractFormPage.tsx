@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getContract, createContract, updateContract } from '../services/contracts.service';
 import { ContractFormValues, ContractStatus } from '../types/contract.types';
+import { toDateInputValue } from '@/shared/utils/date-only';
 
 const STATUSES: ContractStatus[] = ['New', 'Running', 'Expired', 'Cancelled'];
 
@@ -26,7 +27,7 @@ export default function ContractFormPage() {
       employeeId: c.employeeId, contractRef: c.contractRef ?? '',
       status: c.status, department: c.department ?? '',
       jobPosition: c.jobPosition ?? '', wage: c.wage,
-      startDate: c.startDate, endDate: c.endDate ?? '',
+      startDate: toDateInputValue(c.startDate), endDate: toDateInputValue(c.endDate),
       scheduleId: c.scheduleId ?? '', structureId: c.structureId ?? '',
       notes: c.notes ?? '',
     })).catch(() => setError('Failed to load contract'));

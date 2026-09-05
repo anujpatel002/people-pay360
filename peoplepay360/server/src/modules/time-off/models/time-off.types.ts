@@ -1,4 +1,5 @@
 import { RowDataPacket } from 'mysql2';
+import { toDateOnly } from '../../../shared/utils/date-only';
 
 // ─── Time Off Type ────────────────────────────────────────────────────────────
 
@@ -120,8 +121,8 @@ export interface TimeOffRequestRow extends RowDataPacket {
   type_id: string;
   type_name: string | null;
   allocation_id: string | null;
-  start_date: string;
-  end_date: string;
+  start_date: string | Date;
+  end_date: string | Date;
   days: number;
   status: string;
   reason: string | null;
@@ -155,8 +156,8 @@ export function toTimeOffRequest(row: TimeOffRequestRow): TimeOffRequest {
     typeId: row.type_id,
     typeName: row.type_name ?? undefined,
     allocationId: row.allocation_id,
-    startDate: row.start_date,
-    endDate: row.end_date,
+    startDate: toDateOnly(row.start_date),
+    endDate: toDateOnly(row.end_date),
     days: Number(row.days),
     status: row.status,
     reason: row.reason,

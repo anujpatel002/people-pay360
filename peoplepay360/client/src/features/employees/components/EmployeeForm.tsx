@@ -32,7 +32,8 @@ export default function EmployeeForm({ initial = EMPTY, onSubmit, submitLabel = 
     try {
       await onSubmit(values as EmployeeFormValues);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      const apiError = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setError(apiError ?? (err instanceof Error ? err.message : 'An error occurred'));
     } finally {
       setSaving(false);
     }

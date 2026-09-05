@@ -1,5 +1,6 @@
 import { RowDataPacket } from 'mysql2';
 import { Contract } from './contract.types';
+import { toDateOnly } from '../../../shared/utils/date-only';
 
 export interface ContractRow extends RowDataPacket {
   id: string;
@@ -10,8 +11,8 @@ export interface ContractRow extends RowDataPacket {
   department: string | null;
   job_position: string | null;
   wage: number;
-  start_date: string;
-  end_date: string | null;
+  start_date: string | Date;
+  end_date: string | Date | null;
   schedule_id: string | null;
   schedule_name: string | null;
   structure_id: string | null;
@@ -31,8 +32,8 @@ export function toContract(row: ContractRow): Contract {
     department:    row.department ?? undefined,
     jobPosition:   row.job_position ?? undefined,
     wage:          Number(row.wage),
-    startDate:     row.start_date,
-    endDate:       row.end_date ?? null,
+    startDate:     toDateOnly(row.start_date),
+    endDate:       row.end_date == null ? null : toDateOnly(row.end_date),
     scheduleId:    row.schedule_id ?? undefined,
     scheduleName:  row.schedule_name ?? undefined,
     structureId:   row.structure_id ?? undefined,

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
 export const createTypeSchema = z.object({
   name:               z.string().min(1, 'name is required'),
   unit:               z.enum(['days', 'hours']),
@@ -18,8 +20,8 @@ const allocationBase = z.object({
   typeId:        z.string().min(1, 'typeId is required'),
   year:          z.number().int().min(2000),
   totalDays:     z.number().positive('totalDays must be positive'),
-  validityStart: z.string().min(1, 'validityStart is required'),
-  validityEnd:   z.string().min(1, 'validityEnd is required'),
+  validityStart: z.string().regex(DATE_ONLY, 'validityStart must use YYYY-MM-DD format'),
+  validityEnd:   z.string().regex(DATE_ONLY, 'validityEnd must use YYYY-MM-DD format'),
   approverId:    z.string().optional(),
 });
 
@@ -38,8 +40,8 @@ export const updateAllocationSchema = allocationBase
 
 export const createRequestSchema = z.object({
   typeId:    z.string().min(1, 'typeId is required'),
-  startDate: z.string().min(1, 'startDate is required'),
-  endDate:   z.string().min(1, 'endDate is required'),
+  startDate: z.string().regex(DATE_ONLY, 'startDate must use YYYY-MM-DD format'),
+  endDate:   z.string().regex(DATE_ONLY, 'endDate must use YYYY-MM-DD format'),
   days:      z.number().positive('days must be positive'),
   reason:    z.string().optional(),
 }).refine(d => d.endDate >= d.startDate, {

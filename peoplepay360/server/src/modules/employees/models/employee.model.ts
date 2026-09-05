@@ -1,5 +1,6 @@
 import { RowDataPacket } from 'mysql2';
 import { Employee } from '../types/employee.types';
+import { toDateOnly } from '../../../shared/utils/date-only';
 
 export interface EmployeeRow extends RowDataPacket {
   id: string;
@@ -20,7 +21,7 @@ export interface EmployeeRow extends RowDataPacket {
   company_id: string | null;
   location: string | null;
   schedule_id: string | null;
-  hire_date: string;
+  hire_date: string | Date;
   current_contract_id: string | null;
   bank_account: string | null;
   iban: string | null;
@@ -54,7 +55,7 @@ export function toEmployee(row: EmployeeRow): Employee {
     companyId:            row.company_id ?? undefined,
     location:             row.location ?? undefined,
     scheduleId:           row.schedule_id ?? undefined,
-    hireDate:             row.hire_date,
+    hireDate:             toDateOnly(row.hire_date),
     currentContractId:    row.current_contract_id ?? undefined,
     bankAccount:          row.bank_account ?? undefined,
     iban:                 row.iban ?? undefined,

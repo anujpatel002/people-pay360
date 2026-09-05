@@ -11,6 +11,7 @@ import EmployeeForm from '../components/EmployeeForm';
 import EmployeeContractSummary from '../components/EmployeeContractSummary';
 import EmployeeArchiveDialog from '../components/EmployeeArchiveDialog';
 import EmployeeRestoreDialog from '../components/EmployeeRestoreDialog';
+import { toDateInputValue } from '@/shared/utils/date-only';
 
 const PAYROLL_ROLES = new Set(['HR Payroll User', 'HR Payroll Manager', 'Admin']);
 const HR_ROLES = new Set(['HR Manager', 'HR Payroll User', 'HR Payroll Manager', 'Admin']);
@@ -67,7 +68,7 @@ export default function EmployeeFormPage() {
         departmentId: employee.departmentId, managerId: employee.managerId,
         employmentType: employee.employmentType, companyId: employee.companyId,
         location: employee.location, scheduleId: employee.scheduleId,
-        hireDate: employee.hireDate,
+        hireDate: toDateInputValue(employee.hireDate),
         bankAccount: employee.bankAccount, iban: employee.iban, swift: employee.swift,
       }
     : { employmentType: 'full_time' };

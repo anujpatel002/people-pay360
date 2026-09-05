@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const CONTRACT_STATUSES = ['New', 'Running', 'Expired', 'Cancelled'] as const;
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 const contractBase = z.object({
   employeeId:  z.string().min(1, 'employeeId is required'),
@@ -9,8 +10,8 @@ const contractBase = z.object({
   department:  z.string().optional(),
   jobPosition: z.string().optional(),
   wage:        z.number({ invalid_type_error: 'wage must be a number' }).min(0, 'wage must be non-negative'),
-  startDate:   z.string().min(1, 'startDate is required'),
-  endDate:     z.string().nullable().optional(),
+  startDate:   z.string().regex(DATE_ONLY, 'startDate must use YYYY-MM-DD format'),
+  endDate:     z.string().regex(DATE_ONLY, 'endDate must use YYYY-MM-DD format').nullable().optional(),
   scheduleId:  z.string().optional(),
   structureId: z.string().optional(),
   notes:       z.string().optional(),
