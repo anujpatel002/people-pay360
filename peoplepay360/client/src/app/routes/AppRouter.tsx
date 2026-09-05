@@ -3,6 +3,8 @@ import LoginPage from '@/features/auth/pages/LoginPage';
 import UsersListPage from '@/features/users/pages/UsersListPage';
 import UserFormPage from '@/features/users/pages/UserFormPage';
 import ProtectedRoute from './ProtectedRoute';
+import EmployeeKanbanPage from '@/features/employees/pages/EmployeeKanbanPage';
+import EmployeeFormPage from '@/features/employees/pages/EmployeeFormPage';
 
 export default function AppRouter() {
   return (
@@ -13,6 +15,8 @@ export default function AppRouter() {
           <Route path="/dashboard" element={<div>Dashboard (coming soon)</div>} />
           <Route path="/users" element={<UsersListPage />} />
           <Route path="/users/:id" element={<UserFormPage />} />
+          <Route path="/employees" element={<EmployeeKanbanPage />} />
+          <Route path="/employees/:id" element={<EmployeeFormPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

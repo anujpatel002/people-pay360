@@ -1,22 +1,21 @@
-version: '3.9'
-
 services:
   db:
     image: mysql:8.0
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: peoplepay360
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
     ports:
-      - '3306:3306'
+      - '${DB_PORT:-3306}:3306'
     volumes:
       - mysqldata:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-uroot', '-proot']
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 12
+      start_period: 30s
 
   server:
     build:
@@ -32,8 +31,8 @@ services:
       DB_HOST: db
       DB_PORT: 3306
       DB_USER: root
-      DB_PASSWORD: root
-      DB_NAME: peoplepay360
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
       JWT_ACCESS_SECRET: dev_access_secret_change_in_prod
       JWT_REFRESH_SECRET: dev_refresh_secret_change_in_prod
       JWT_ACCESS_EXPIRES_IN: 15m
