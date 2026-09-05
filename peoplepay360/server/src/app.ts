@@ -8,6 +8,7 @@ import usersRoutes from './modules/users/routes/users.routes';
 import employeeRoutes from './modules/employees/routes/employees.routes';
 import contractRoutes from './modules/contracts/routes/contracts.routes';
 import workingSchedulesRoutes from './modules/working-schedules/routes/working-schedules.routes';
+import payrollConfigRoutes from './modules/payroll-config/routes/payroll-config.routes';
 import attendanceRoutes from './modules/attendance/routes/attendance.routes';
 import timeOffRoutes from './modules/time-off/routes/time-off.routes';
 
@@ -25,6 +26,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/contracts', contractRoutes);
 app.use('/api/working-schedules', workingSchedulesRoutes);
+app.use('/api/payroll-config', payrollConfigRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/time-off', timeOffRoutes);
 
