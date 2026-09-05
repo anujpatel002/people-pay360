@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const EMPLOYMENT_TYPES = ['full_time', 'part_time', 'contractor'] as const;
+const EMPLOYMENT_TYPE = ['full_time', 'part_time', 'contractor'] as const;
 
 export const createEmployeeSchema = z.object({
   firstName:              z.string().min(1, 'First name is required'),
@@ -14,7 +14,7 @@ export const createEmployeeSchema = z.object({
   jobPositionId:          z.string().optional(),
   departmentId:           z.string().optional(),
   managerId:              z.string().optional(),
-  employmentType:         z.enum(EMPLOYMENT_TYPES, { errorMap: () => ({ message: 'Invalid employment type' }) }),
+  employmentType:         z.enum(EMPLOYMENT_TYPE, { errorMap: () => ({ message: 'Invalid employment type' }) }),
   companyId:              z.string().optional(),
   location:               z.string().optional(),
   scheduleId:             z.string().optional(),

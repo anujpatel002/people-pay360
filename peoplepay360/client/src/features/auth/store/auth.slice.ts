@@ -5,12 +5,14 @@ interface AuthState {
   accessToken: string | null;
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isInitialized: boolean;
 }
 
 const initialState: AuthState = {
   accessToken: null,
   user: null,
   isAuthenticated: false,
+  isInitialized: false,
 };
 
 const authSlice = createSlice({
@@ -21,7 +23,11 @@ const authSlice = createSlice({
       state.accessToken = action.payload.accessToken;
       state.user = action.payload.user;
       state.isAuthenticated = true;
+      state.isInitialized = true;
       sessionStorage.setItem('accessToken', action.payload.accessToken);
+    },
+    markInitialized(state) {
+      state.isInitialized = true;
     },
     clearCredentials(state) {
       state.accessToken = null;
@@ -32,5 +38,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, clearCredentials } = authSlice.actions;
+export const { setCredentials, markInitialized, clearCredentials } = authSlice.actions;
 export default authSlice.reducer;

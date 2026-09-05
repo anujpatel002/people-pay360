@@ -937,11 +937,11 @@ Query parameters
 period
 companyId
 departmentId
-employmentTypeId
+employmentType
 
 Example:
 
-GET /api/dashboard?period=2024-03&companyId=cmp_001&departmentId=dep_eng&employmentTypeId=et_full_time
+GET /api/dashboard?period=2024-03&companyId=cmp_001&departmentId=dep_eng&employmentType=et_full_time
 
 Use structured IDs rather than display names.
 
@@ -952,7 +952,7 @@ Use structured IDs rather than display names.
     "period": "2024-03",
     "companyId": "cmp_001",
     "departmentId": "dep_eng",
-    "employmentTypeId": "et_full_time"
+    "employmentType": "et_full_time"
   },
   "kpis": {
     "totalNetSalaryPaid": 2850000,
@@ -1055,7 +1055,7 @@ Example POST:
   "period": "2024-03",
   "companyId": "cmp_001",
   "departmentId": "dep_eng",
-  "employmentTypeId": "et_full_time",
+  "employmentType": "et_full_time",
   "isDefault": false
 }
 

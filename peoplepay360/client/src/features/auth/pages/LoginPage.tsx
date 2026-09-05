@@ -5,6 +5,21 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { submit, error, loading } = useLogin();
+  const seededEmails = [
+    'anuj.patel@company.com',
+    'priya.sharma@company.com',
+    'neha.desai@company.com',
+    'rahul.verma@company.com',
+    'vikram.singh@company.com',
+    'sneha.patel@company.com',
+    'amit.kumar@company.com',
+    'kavita.reddy@company.com',
+  ];
+
+  function handleSeededAccountChange(value: string) {
+    setEmail(value);
+    if (value) setPassword('Test@1234');
+  }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -18,6 +33,22 @@ export default function LoginPage() {
         <p style={styles.subtitle}>Sign in to your account</p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          <label style={styles.label}>
+            Seeded Account
+            <select
+              value={email}
+              onChange={(e) => handleSeededAccountChange(e.target.value)}
+              style={styles.input}
+            >
+              <option value="">Select an account</option>
+              {seededEmails.map((seededEmail) => (
+                <option key={seededEmail} value={seededEmail}>
+                  {seededEmail}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <label style={styles.label}>
             Work Email
             <input

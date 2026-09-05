@@ -11,17 +11,16 @@ import {
 
 const HR     = ['HR Manager', 'HR Payroll User', 'HR Payroll Manager', 'Admin'] as const;
 const HM     = ['HR Manager', 'Admin'] as const;
-const HPM    = ['HR Payroll Manager', 'Admin'] as const;
 
 const h = (fn: Function) => fn as unknown as RequestHandler;
 
 const router = Router();
 router.use(authMiddleware as unknown as RequestHandler);
 
-// Types — read: HR+, write: HR Payroll Manager+
-router.get('/types',      requireRoles(...HR)  as unknown as RequestHandler, h(listTypes));
-router.post('/types',     requireRoles(...HPM) as unknown as RequestHandler, h(createType));
-router.put('/types/:id',  requireRoles(...HPM) as unknown as RequestHandler, h(updateType));
+// Types — full CRUD: HR Manager+
+router.get('/types',      requireRoles(...HR) as unknown as RequestHandler, h(listTypes));
+router.post('/types',     requireRoles(...HR) as unknown as RequestHandler, h(createType));
+router.put('/types/:id',  requireRoles(...HR) as unknown as RequestHandler, h(updateType));
 
 // Allocations — HR Manager+
 router.get('/allocations',      requireRoles(...HR) as unknown as RequestHandler, h(listAllocations));

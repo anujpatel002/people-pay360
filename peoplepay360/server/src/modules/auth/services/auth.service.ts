@@ -48,7 +48,7 @@ export async function login(
 
 export async function refresh(
   rawToken: string
-): Promise<{ accessToken: string; newRefreshToken: string }> {
+): Promise<{ accessToken: string; newRefreshToken: string; user: AuthUser }> {
   const { userId, newRaw } = await rotateRefreshToken(rawToken);
 
   const [rows] = await pool.execute<UserRow[]>(
@@ -67,7 +67,7 @@ export async function refresh(
     role: userRow.role,
   };
 
-  return { accessToken: signAccessToken(user), newRefreshToken: newRaw };
+  return { accessToken: signAccessToken(user), newRefreshToken: newRaw, user };
 }
 
 export async function logout(rawToken: string): Promise<void> {

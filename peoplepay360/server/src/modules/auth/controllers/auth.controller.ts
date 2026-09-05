@@ -49,9 +49,9 @@ export async function refreshHandler(req: Request, res: Response, next: NextFunc
       return;
     }
 
-    const { accessToken, newRefreshToken } = await authService.refresh(raw);
+    const { accessToken, newRefreshToken, user } = await authService.refresh(raw);
     res.cookie(COOKIE_NAME, newRefreshToken, COOKIE_OPTIONS);
-    res.json({ accessToken });
+    res.json({ accessToken, user });
   } catch (err) {
     next(err);
   }

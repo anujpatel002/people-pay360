@@ -15,7 +15,7 @@ export async function logout(): Promise<void> {
   await httpClient.post('/auth/logout');
 }
 
-export async function refreshToken(): Promise<{ accessToken: string }> {
-  const { data } = await httpClient.post<{ accessToken: string }>('/auth/refresh');
+export async function refreshToken(): Promise<LoginResponse> {
+  const { data } = await httpClient.post<LoginResponse>('/auth/refresh');
   return data;
 }
