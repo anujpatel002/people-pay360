@@ -1,18 +1,50 @@
 import pool from '../../database/connection/pool';
 import { hashPassword } from '../../modules/auth/services/password.service';
 
-interface SeedUser {
+interface DemoUser {
   firstName: string;
   lastName: string;
   email: string;
-  role: string;
   password: string;
+  role: string;
 }
 
-const SEED_USERS: SeedUser[] = [
-  { firstName: 'Anuj',        lastName: 'Patel',  email: 'anuj.patel@company.com',        role: 'Admin',            password: 'Admin@1234' },
-  { firstName: 'Ahmedabbas',  lastName: 'Momin',  email: 'ahmedabbas.momin@company.com',  role: 'HR Payroll Manager', password: 'Admin@1234' },
-  { firstName: 'Tirth',       lastName: 'Mantri', email: 'tirth.mantri@company.com',      role: 'HR Manager',       password: 'Admin@1234' },
+const DEMO_USERS: DemoUser[] = [
+  {
+    firstName: 'Anuj',
+    lastName: 'Patel',
+    email: 'anuj.patel@company.com',
+    password: 'Admin@1234',
+    role: 'Admin',
+  },
+  {
+    firstName: 'Sara',
+    lastName: 'Mehta',
+    email: 'sara.mehta@company.com',
+    password: 'HRManager@1234',
+    role: 'HR Manager',
+  },
+  {
+    firstName: 'Raj',
+    lastName: 'Sharma',
+    email: 'raj.sharma@company.com',
+    password: 'PayrollUser@1234',
+    role: 'HR Payroll User',
+  },
+  {
+    firstName: 'Priya',
+    lastName: 'Verma',
+    email: 'priya.verma@company.com',
+    password: 'PayrollMgr@1234',
+    role: 'HR Payroll Manager',
+  },
+  {
+    firstName: 'Amit',
+    lastName: 'Singh',
+    email: 'amit.singh@company.com',
+    password: 'Employee@1234',
+    role: 'Employee',
+  },
 ];
 
 async function seed() {
@@ -20,35 +52,46 @@ async function seed() {
   try {
     await conn.beginTransaction();
 
-    for (const u of SEED_USERS) {
+    for (const demo of DEMO_USERS) {
       // Upsert employee
-      const empId = require('crypto').randomUUID() as string;
       await conn.execute(
         `INSERT INTO employees (id, first_name, last_name, work_email, hire_date, status)
-         VALUES (?, ?, ?, ?, CURDATE(), 'active')
-         ON DUPLICATE KEY UPDATE first_name = VALUES(first_name)`,
-        [empId, u.firstName, u.lastName, u.email]
+         VALUES (UUID(), ?, ?, ?, CURDATE(), 'active')
+         ON DUPLICATE KEY UPDATE first_name = VALUES(first_name), last_name = VALUES(last_name)`,
+        [demo.firstName, demo.lastName, demo.email]
       );
 
+      // Fetch the employee id (handles both insert and duplicate)
       const [empRows] = await conn.execute<any[]>(
         'SELECT id FROM employees WHERE work_email = ?',
-        [u.email]
+        [demo.email]
       );
-      const actualEmpId = empRows[0].id;
+      const employeeId = empRows[0].id;
 
-      const passwordHash = await hashPassword(u.password);
+      const passwordHash = await hashPassword(demo.password);
+
+      // Upsert user
       await conn.execute(
         `INSERT INTO users (id, employee_id, name, work_email, password_hash, role, is_active)
          VALUES (UUID(), ?, ?, ?, ?, ?, 1)
-         ON DUPLICATE KEY UPDATE name = VALUES(name)`,
-        [actualEmpId, `${u.firstName} ${u.lastName}`, u.email, passwordHash, u.role]
+         ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), role = VALUES(role)`,
+        [employeeId, `${demo.firstName} ${demo.lastName}`, demo.email, passwordHash, demo.role]
       );
-
-      console.log(`Seeded: ${u.email} / ${u.password} (${u.role})`);
     }
 
     await conn.commit();
-    console.log('\nSeed complete.');
+
+    console.log('\nDemo seed complete. Credentials:\n');
+    console.log('┌─────────────────────────────────┬──────────────────────┬──────────────────────┐');
+    console.log('│ Role                            │ Email                │ Password             │');
+    console.log('├─────────────────────────────────┼──────────────────────┼──────────────────────┤');
+    for (const u of DEMO_USERS) {
+      const role = u.role.padEnd(31);
+      const email = u.email.padEnd(20);
+      const pass = u.password.padEnd(20);
+      console.log(`│ ${role} │ ${email} │ ${pass} │`);
+    }
+    console.log('└─────────────────────────────────┴──────────────────────┴──────────────────────┘');
   } catch (err) {
     await conn.rollback();
     console.error('Seed failed:', err);
