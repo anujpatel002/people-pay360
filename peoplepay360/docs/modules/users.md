@@ -1,7 +1,10 @@
 # Module: users
 
+## SRS References
+FR-003 (Administrator User Management)
+
 ## Overview
-Admin-only module for managing user accounts and role assignments. Distinct from `employees` — a user account is a login identity, an employee record is HR master data. Depends on `auth` for the current session.
+Admin-only module for creating and editing application user accounts, linking each account to an employee record, and assigning access roles. A user account (login identity) is explicitly distinct from an Employee record (HR master data) per SRS §1.6. Depends on `auth` for session; `employees` must exist before a user can be linked.
 
 ---
 
@@ -10,31 +13,31 @@ Admin-only module for managing user accounts and role assignments. Distinct from
 ### Components
 | File | Responsibility |
 |------|---------------|
-| `components/UserTable.tsx` | Paginated table of all users with role badge and action buttons |
-| `components/RoleSelector.tsx` | Dropdown to assign/change a user's role |
+| `components/UserTable.tsx` | Paginated list of all users — name, work email, linked employee, role badge, active status, action buttons |
+| `components/RoleSelector.tsx` | Dropdown constrained to valid roles from `shared/constants/roles.ts` — prevents self-elevation |
 
 ### Pages
 | File | Responsibility |
 |------|---------------|
-| `pages/UserListPage.tsx` | Lists all users, search + filter by role, links to form |
-| `pages/UserFormPage.tsx` | Create / edit user — name, email, role, active status |
+| `pages/UserListPage.tsx` | User Management list — NEW, search, role filter, row selection (FR-003) |
+| `pages/UserFormPage.tsx` | Create / Edit User form — employee link (required), work email, role(s), account status |
 
 ### Hooks
 | File | Responsibility |
 |------|---------------|
-| `hooks/useUsers.ts` | Fetches paginated user list, exposes search/filter params |
-| `hooks/useUser.ts` | Fetches single user by ID for edit form |
+| `hooks/useUsers.ts` | Fetches paginated user list with search + role filter params |
+| `hooks/useUser.ts` | Fetches single user by ID for edit form pre-population |
 
 ### Services
 | File | Responsibility |
 |------|---------------|
-| `services/users.service.ts` | `getUsers()`, `getUser(id)`, `createUser()`, `updateUser()`, `deleteUser()` |
+| `services/users.service.ts` | `getUsers(filters)`, `getUser(id)`, `createUser()`, `updateUser()`, `deactivateUser()` |
 
 ### Tests
 | File | Responsibility |
 |------|---------------|
-| `tests/useUsers.test.ts` | Hook tests — fetch, filter, pagination |
-| `tests/users.service.test.ts` | Mocked API call assertions |
+| `tests/useUsers.test.ts` | Hook tests — fetch, role filter, pagination state |
+| `tests/users.service.test.ts` | Mocked API — create, update, deactivate calls |
 
 ---
 
@@ -43,33 +46,33 @@ Admin-only module for managing user accounts and role assignments. Distinct from
 ### Controllers
 | File | Responsibility |
 |------|---------------|
-| `controllers/users.controller.ts` | CRUD handlers — list, get, create, update, delete |
+| `controllers/users.controller.ts` | List, get, create, update, deactivate handlers — delegates to service |
 
 ### Services
 | File | Responsibility |
 |------|---------------|
-| `services/users.service.ts` | Business logic — role validation, duplicate email check, account activation |
+| `services/users.service.ts` | Role validation against allowed enum, duplicate email check, employee-link validation, self-elevation prevention, account activation/deactivation |
 
 ### Repositories
 | File | Responsibility |
 |------|---------------|
-| `repositories/users.repository.ts` | All DB queries for users table — findAll, findById, findByEmail, create, update, delete |
+| `repositories/users.repository.ts` | findAll (with filters), findById, findByEmail, create, update, softDelete |
 
 ### Routes
 | File | Responsibility |
 |------|---------------|
-| `routes/users.routes.ts` | Mounts handlers on `/api/users`, applies `auth.middleware` + `role-guard(Admin)` |
+| `routes/users.routes.ts` | `/api/users` — all routes behind `auth.middleware` + `role-guard([Admin])` |
 
 ### Models
 | File | Responsibility |
 |------|---------------|
-| `models/user.model.ts` | User schema — id, name, email, passwordHash, role, isActive, timestamps |
+| `models/user.model.ts` | Schema — id, employeeId (FK, required), name, workEmail (unique), passwordHash, role, isActive, timestamps |
 
 ### Tests
 | File | Responsibility |
 |------|---------------|
-| `tests/users.service.test.ts` | Unit — role validation, duplicate email |
-| `tests/users.integration.test.ts` | Integration — full CRUD against test DB |
+| `tests/users.service.test.ts` | Unit — duplicate email rejection, invalid role rejection, self-elevation block, deactivating last admin |
+| `tests/users.integration.test.ts` | Integration — full CRUD + role assignment against test DB |
 
 ---
 
@@ -77,16 +80,19 @@ Admin-only module for managing user accounts and role assignments. Distinct from
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/users` | Admin | Paginated user list |
+| GET | `/api/users` | Admin | Paginated user list with search + role filter |
 | GET | `/api/users/:id` | Admin | Single user |
-| POST | `/api/users` | Admin | Create user |
-| PUT | `/api/users/:id` | Admin | Update user / change role |
-| DELETE | `/api/users/:id` | Admin | Deactivate user |
+| POST | `/api/users` | Admin | Create user linked to employee |
+| PUT | `/api/users/:id` | Admin | Update user / change role / toggle active |
+| DELETE | `/api/users/:id` | Admin | Soft-deactivate user (`isActive = false`) |
 
 ---
 
-## Key Rules
-- All routes are Admin-only via `role-guard` middleware
-- Passwords are hashed by `auth/services/password.service.ts` — users module never handles raw passwords directly
-- Deleting a user is a soft delete (sets `isActive = false`), not a hard delete
-- A user's role must be one of the constants defined in `shared/constants/roles.ts`
+## Key Rules (SRS §FR-003)
+- Employee link is required on every user account — a user cannot exist without a linked employee (FR-003)
+- Work email must be unique across all user accounts
+- Role must be one of the five canonical roles in `shared/constants/roles.ts` (SRS §3)
+- Admin cannot elevate their own role or deactivate the last active Admin account
+- Deactivation is soft (`isActive = false`) — hard delete is not supported; historical payroll/audit references remain intact
+- Password is hashed by `auth/services/password.service.ts` — this module never handles raw passwords
+- Permissions take effect on the next authorization evaluation after role change (FR-003 postcondition)
