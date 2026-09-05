@@ -9,6 +9,8 @@ import EmployeeKanbanPage from '@/features/employees/pages/EmployeeKanbanPage';
 import EmployeeFormPage from '@/features/employees/pages/EmployeeFormPage';
 import ContractListPage from '@/features/contracts/pages/ContractListPage';
 import ContractFormPage from '@/features/contracts/pages/ContractFormPage';
+import AttendanceListPage from '@/features/attendance/pages/AttendanceListPage';
+import AttendanceFormPage from '@/features/attendance/pages/AttendanceFormPage';
 
 export default function AppRouter() {
   return (
@@ -26,6 +28,8 @@ export default function AppRouter() {
           <Route path="/contracts" element={<ContractListPage />} />
           <Route path="/contracts/new" element={<ContractFormPage />} />
           <Route path="/contracts/:id" element={<ContractFormPage />} />
+          <Route path="/attendance" element={<AttendanceListPage />} />
+          <Route path="/attendance/:id" element={<AttendanceFormPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

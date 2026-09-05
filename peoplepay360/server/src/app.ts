@@ -8,6 +8,7 @@ import usersRoutes from './modules/users/routes/users.routes';
 import employeeRoutes from './modules/employees/routes/employees.routes';
 import contractRoutes from './modules/contracts/routes/contracts.routes';
 import workingSchedulesRoutes from './modules/working-schedules/routes/working-schedules.routes';
+import attendanceRoutes from './modules/attendance/routes/attendance.routes';
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/contracts', contractRoutes);
 app.use('/api/working-schedules', workingSchedulesRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
