@@ -55,16 +55,6 @@ auth → users → employees → contracts → working-schedules
 
 ---
 
-## Timeline Overview
-
-| Teammate | Week 1 | Week 2 | Week 3 | Week 4 |
-|----------|--------|--------|--------|--------|
-| Anuj Patel | auth | contracts | time-off | dashboard |
-| Ahmedabbas Momin | users | working-schedules | payroll-config | — |
-| Tirth Mantri | employees | attendance | payroll | — |
-
----
-
 ## Rules
 
 - No teammate picks up their next module until the blocking dependency is merged
