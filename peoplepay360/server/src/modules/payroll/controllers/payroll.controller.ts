@@ -1,0 +1,27 @@
+import { Response, NextFunction } from 'express';
+import { RequestWithUser } from '../../../shared/types';
+import * as payroll from '../services/payroll.service';
+
+const actor = (req: RequestWithUser) => req.user;
+export const listPayruns = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.listPayruns(req.query)); } catch(e){next(e);} };
+export const createPayrun = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.status(201).json(await payroll.createPayrun(req.body,actor(req))); } catch(e){next(e);} };
+export const getPayrun = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.getPayrun(req.params.id)); } catch(e){next(e);} };
+export const compute = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.computePayrun(req.params.id,actor(req))); } catch(e){next(e);} };
+export const recompute = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.computePayrun(req.params.id,actor(req),true)); } catch(e){next(e);} };
+export const validate = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.validatePayrun(req.params.id,actor(req))); } catch(e){next(e);} };
+export const markPaid = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.markPaid(req.params.id,actor(req),req.body)); } catch(e){next(e);} };
+export const send = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.sendPayslips(req.params.id,actor(req))); } catch(e){next(e);} };
+export const retryDelivery = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.sendPayslips(req.params.id,actor(req),true)); } catch(e){next(e);} };
+export const getInputs = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.listInputs(req.params.id)); } catch(e){next(e);} };
+export const addInput = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { await payroll.addInput(req.params.id,req.body,actor(req)); res.status(201).json({ok:true}); } catch(e){next(e);} };
+export const updateInput = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { await payroll.updateInput(req.params.id,req.body,actor(req));res.json({ok:true}); }catch(e){next(e);} };
+export const deleteInput = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { await payroll.deleteInput(req.params.id,actor(req));res.status(204).end(); }catch(e){next(e);} };
+export const getWarnings = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { const r=await payroll.getPayrun(req.params.id);res.json({data:r.warnings}); } catch(e){next(e);} };
+export const resolveWarning = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { await payroll.resolveWarning(req.params.id,req.body.resolutionNote,actor(req));res.json({ok:true}); } catch(e){next(e);} };
+export const listPayslips = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.listPayslips(req.query)); } catch(e){next(e);} };
+export const getPayslip = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.getPayslip(req.params.id)); } catch(e){next(e);} };
+export const getPayslipPdf = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { const s=await payroll.getPayslip(req.params.id); const esc=(v:unknown)=>String(v??'').replace(/[\\()]/g,'\\$&'); const rows=(s.lines??[]).map((l:any)=>`${l.rule_name}: ${l.amount}`).join(' | '); const content=`BT /F1 14 Tf 50 780 Td (PeoplePay360 Payslip) Tj 0 -24 Td /F1 10 Tf (${esc(s.employee_name_snapshot)}) Tj 0 -16 Td (Gross: ${s.gross}  Deductions: ${s.deductions}  Net: ${s.net}) Tj 0 -16 Td (${esc(rows).slice(0,350)}) Tj ET`; const objects=['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R] /Count 1 >>','<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',`<< /Length ${content.length} >>\nstream\n${content}\nendstream`]; let pdf='%PDF-1.4\n'; const offsets=[0]; objects.forEach((o,i)=>{offsets.push(pdf.length);pdf+=`${i+1} 0 obj\n${o}\nendobj\n`;}); const start=pdf.length;pdf+=`xref\n0 ${objects.length+1}\n0000000000 65535 f \n${offsets.slice(1).map(x=>String(x).padStart(10,'0')+' 00000 n ').join('\n')}\ntrailer << /Size ${objects.length+1} /Root 1 0 R >>\nstartxref\n${start}\n%%EOF`; res.type('application/pdf').send(Buffer.from(pdf)); }catch(e){next(e);} };
+export const createPeriod = async (req: RequestWithUser,res:Response,next:NextFunction) => { try {res.status(201).json(await payroll.createPeriod(req.body,actor(req)));}catch(e){next(e);} };
+export const listPeriods = async (_req: RequestWithUser,res:Response,next:NextFunction) => {try{res.json(await payroll.listPeriods());}catch(e){next(e);}};
+export const listPayments = async (req: RequestWithUser,res:Response,next:NextFunction) => {try{res.json(await payroll.listPayments(req.params.id));}catch(e){next(e);}};
+export const listDelivery = async (req: RequestWithUser,res:Response,next:NextFunction) => {try{res.json(await payroll.listDelivery(req.params.id));}catch(e){next(e);}};

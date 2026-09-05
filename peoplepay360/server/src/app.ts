@@ -10,6 +10,7 @@ import contractRoutes from './modules/contracts/routes/contracts.routes';
 import workingSchedulesRoutes from './modules/working-schedules/routes/working-schedules.routes';
 import attendanceRoutes from './modules/attendance/routes/attendance.routes';
 import timeOffRoutes from './modules/time-off/routes/time-off.routes';
+import payrollRoutes from './modules/payroll/routes/payroll.routes';
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/contracts', contractRoutes);
 app.use('/api/working-schedules', workingSchedulesRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/time-off', timeOffRoutes);
+app.use('/api/payroll', payrollRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));

@@ -15,6 +15,10 @@ import TypeConfigPage from '@/features/time-off/pages/TypeConfigPage';
 import AllocationListPage from '@/features/time-off/pages/AllocationListPage';
 import RequestListPage from '@/features/time-off/pages/RequestListPage';
 import RequestFormPage from '@/features/time-off/pages/RequestFormPage';
+import PayrunListPage from '@/features/payroll/pages/PayrunListPage';
+import PayrunWizardPage from '@/features/payroll/pages/PayrunWizardPage';
+import PayrunProcessingPage from '@/features/payroll/pages/PayrunProcessingPage';
+import PayslipDetailPage from '@/features/payroll/pages/PayslipDetailPage';
 
 export default function AppRouter() {
   return (
@@ -38,6 +42,10 @@ export default function AppRouter() {
           <Route path="/time-off/allocations" element={<AllocationListPage />} />
           <Route path="/time-off/requests" element={<RequestListPage />} />
           <Route path="/time-off/requests/new" element={<RequestFormPage />} />
+          <Route path="/payroll" element={<PayrunListPage />} />
+          <Route path="/payroll/new" element={<PayrunWizardPage />} />
+          <Route path="/payroll/:id" element={<PayrunProcessingPage />} />
+          <Route path="/payslips/:id" element={<PayslipDetailPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
