@@ -29,7 +29,7 @@ export async function findAll(filters: { search?: string; isActive?: boolean }):
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const [rows] = await pool.execute<ScheduleRow[]>(
     `SELECT * FROM working_schedules ${where} ORDER BY name ASC`,
-    params
+    params as any[]
   );
   return rows;
 }
@@ -77,7 +77,7 @@ export async function update(id: string, data: {
 
   if (!fields.length) return;
   params.push(id);
-  await pool.execute(`UPDATE working_schedules SET ${fields.join(', ')} WHERE id = ?`, params);
+  await pool.execute(`UPDATE working_schedules SET ${fields.join(', ')} WHERE id = ?`, params as any[]);
 }
 
 export async function remove(id: string): Promise<void> {

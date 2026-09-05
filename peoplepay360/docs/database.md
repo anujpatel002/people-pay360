@@ -25,25 +25,83 @@ All tables use `UUID` primary keys. `created_at` and `updated_at` are `TIMESTAMP
 
 ## Relationship Overview
 
+### Notation
 ```
-working_schedules ──< employees (scheduleId)
-working_schedules ──< contracts (scheduleId)
-employees ──< employees (managerId, self-ref)
-employees ──< users (employeeId)
-employees ──< contracts (employeeId)
-employees ──< attendance_records (employeeId)
-employees ──< time_off_allocations (employeeId)
-employees ──< time_off_requests (employeeId)
-employees ──< payslips (employeeId)
-salary_structures ──< contracts (structureId)
-salary_structures ──< salary_rules (structureId)
-salary_structures ──< payruns (structureId)
-contracts ──< payslips (contractId, snapshot)
-time_off_types ──< time_off_allocations (typeId)
-time_off_types ──< time_off_requests (typeId)
-time_off_allocations ──< time_off_requests (allocationId)
-payruns ──< payslips (payrunId)
-payslips ──< payslip_lines (payslipId)
+||--||   One-to-One   (exactly one on each side)
+||--|<   One-to-Many  (one on left, many on right)
+>|--|<   Many-to-Many (resolved via junction table)
+```
+
+### One-to-One (1:1)
+
+| Table A | | Table B | Via Column | Note |
+|---|---|---|---|---|
+| `employees` | `||--||` | `users` | `users.employee_id` | UNIQUE constraint — one login per employee |
+
+### One-to-Many (1:N)
+
+| One (Parent) | | Many (Child) | Via Column | Note |
+|---|---|---|---|---|
+| `employees` | `||--|<` | `employees` | `employees.manager_id` | Self-referential — employee hierarchy |
+| `employees` | `||--|<` | `refresh_tokens` | via `users` chain | Indirect — user has many tokens |
+| `employees` | `||--|<` | `contracts` | `contracts.employee_id` | Employee has many contracts over time |
+| `employees` | `||--|<` | `attendance_records` | `attendance_records.employee_id` | Daily check-in records per employee |
+| `employees` | `||--|<` | `time_off_allocations` | `time_off_allocations.employee_id` | Leave balance grants per employee |
+| `employees` | `||--|<` | `time_off_requests` | `time_off_requests.employee_id` | Leave requests per employee |
+| `employees` | `||--|<` | `payslips` | `payslips.employee_id` | One payslip per employee per payrun |
+| `users` | `||--|<` | `refresh_tokens` | `refresh_tokens.user_id` | Many tokens per user (rotation) |
+| `working_schedules` | `||--|<` | `employees` | `employees.schedule_id` | Many employees share one schedule |
+| `working_schedules` | `||--|<` | `contracts` | `contracts.schedule_id` | Many contracts reference one schedule |
+| `working_schedules` | `||--|<` | `attendance_records` | `attendance_records.schedule_id` | Records linked to schedule for OT calc |
+| `salary_structures` | `||--|<` | `salary_rules` | `salary_rules.structure_id` | Structure has many ordered rules |
+| `salary_structures` | `||--|<` | `contracts` | `contracts.structure_id` | Many contracts use one structure |
+| `salary_structures` | `||--|<` | `payruns` | `payruns.structure_id` | Many payruns use one structure |
+| `contracts` | `||--|<` | `payslips` | `payslips.contract_id` | Contract snapshotted on each payslip |
+| `time_off_types` | `||--|<` | `time_off_allocations` | `time_off_allocations.type_id` | Many allocations per leave type |
+| `time_off_types` | `||--|<` | `time_off_requests` | `time_off_requests.type_id` | Many requests per leave type |
+| `time_off_allocations` | `||--|<` | `time_off_requests` | `time_off_requests.allocation_id` | Requests drawn from an allocation |
+| `payruns` | `||--|<` | `payslips` | `payslips.payrun_id` | Many payslips per payrun batch |
+| `payslips` | `||--|<` | `payslip_lines` | `payslip_lines.payslip_id` | Many rule lines per payslip |
+
+### Many-to-Many (M:N)
+
+> No direct M:N join tables exist. The following pairs have an M:N nature resolved via an intermediate table:
+
+| Table A | Junction Table | Table B | Note |
+|---|---|---|---|
+| `employees` | `time_off_allocations` | `time_off_types` | Employee ↔ leave type balance per year |
+| `employees` | `payslips` | `payruns` | Employee ↔ payrun batch (one payslip each) |
+| `salary_structures` | `salary_rules` | *(rules are owned, not shared)* | Rules belong exclusively to one structure |
+
+### Full Diagram
+
+```
+working_schedules ||--|< employees          (schedule_id)
+working_schedules ||--|< contracts          (schedule_id)
+working_schedules ||--|< attendance_records (schedule_id)
+
+employees ||--|| users                      (employee_id, UNIQUE)
+employees ||--|< employees                  (manager_id, self-ref)
+employees ||--|< contracts                  (employee_id)
+employees ||--|< attendance_records         (employee_id)
+employees ||--|< time_off_allocations       (employee_id)
+employees ||--|< time_off_requests          (employee_id)
+employees ||--|< payslips                   (employee_id)
+
+users     ||--|< refresh_tokens             (user_id)
+
+salary_structures ||--|< salary_rules       (structure_id)
+salary_structures ||--|< contracts          (structure_id)
+salary_structures ||--|< payruns            (structure_id)
+
+contracts ||--|< payslips                   (contract_id)
+
+time_off_types ||--|< time_off_allocations  (type_id)
+time_off_types ||--|< time_off_requests     (type_id)
+time_off_allocations ||--|< time_off_requests (allocation_id)
+
+payruns   ||--|< payslips                   (payrun_id)
+payslips  ||--|< payslip_lines              (payslip_id)
 ```
 
 ---
@@ -662,6 +720,489 @@ CREATE INDEX idx_payslip_lines_sequence   ON payslip_lines(payslip_id, sequence)
 | `payslips` | `employee_id` | `employees.id` | RESTRICT |
 | `payslips` | `contract_id` | `contracts.id` | RESTRICT |
 | `payslip_lines` | `payslip_id` | `payslips.id` | CASCADE |
+
+---
+
+## Role-Based Access Per Table
+
+### Roles Reference
+
+| Role | Abbreviation |
+|---|---|
+| Admin | A |
+| HR Manager | HM |
+| HR Payroll User | HPU |
+| HR Payroll Manager | HPM |
+| Employee | E |
+
+### Legend
+```
+✅  Allowed
+❌  Denied
+(own) Self-record only
+```
+
+---
+
+### `users`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read (list / get) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Create | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Update | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Deactivate | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+> Admin-only. No other role can manage user accounts.
+
+---
+
+### `refresh_tokens`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Issued on login | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Rotated on refresh | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Revoked on logout | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+> Managed internally by auth module. No direct API access.
+
+---
+
+### `employees`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read (list / get) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Smart counts | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Create | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Update | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Archive (soft delete) | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Restore | ✅ | ✅ | ✅ | ✅ | ❌ |
+
+> All authenticated users can read. Write operations require HR role or above.
+
+---
+
+### `working_schedules`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Create / Update | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Deactivate | ✅ | ✅ | ✅ | ✅ | ❌ |
+
+---
+
+### `contracts`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read (list / get) | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Get active contract | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Create | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Update | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Delete | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+> No delete endpoint — status change to Expired/Cancelled only. Active contract resolver requires Payroll role.
+
+---
+
+### `attendance_records`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read (list / get) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Check-in | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Check-out | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Get open session | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Correct record | ✅ | ✅ | ✅ | ✅ | ❌ |
+| View corrections | ✅ | ✅ | ✅ | ✅ | ❌ |
+
+> Check-in/out is self-service for all roles. Corrections require HR role.
+
+---
+
+### `time_off_types`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Create / Update | ✅ | ❌ | ❌ | ✅ | ❌ |
+| Deactivate | ✅ | ❌ | ❌ | ✅ | ❌ |
+
+> Only HR Payroll Manager and Admin can configure leave types.
+
+---
+
+### `time_off_allocations`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read | ✅ | ✅ | ✅ | ✅ | ✅(own) |
+| Create / Update | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Approve / Refuse | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+> HR Manager manages and approves allocations. Employees can view their own balance.
+
+---
+
+### `time_off_requests`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read all | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Read own | ✅ | ✅ | ✅ | ✅ | ✅(own) |
+| Create | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Approve | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Refuse | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Cancel (own) | ✅ | ✅ | ✅ | ✅ | ✅(own) |
+
+> Any authenticated user can submit a request. Only HR Manager+ can approve/refuse.
+
+---
+
+### `salary_structures`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Create / Update | ✅ | ❌ | ❌ | ✅ | ❌ |
+| Deactivate | ✅ | ❌ | ❌ | ✅ | ❌ |
+
+---
+
+### `salary_rules`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Create / Update | ✅ | ❌ | ❌ | ✅ | ❌ |
+| Deactivate | ✅ | ❌ | ❌ | ✅ | ❌ |
+
+---
+
+### `payruns`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Create | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Compute | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Validate | ✅ | ❌ | ❌ | ✅ | ❌ |
+| Mark Paid | ✅ | ❌ | ❌ | ✅ | ❌ |
+| Send Payslips | ✅ | ❌ | ❌ | ✅ | ❌ |
+
+> Validate, Mark Paid, and Send require HR Payroll Manager — higher authority actions.
+
+---
+
+### `payslips`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read (list) | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Read own | ✅ | ❌ | ✅ | ✅ | ✅(own) |
+| Download PDF | ✅ | ❌ | ✅ | ✅ | ✅(own) |
+| Delete | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+> Employees can view and download only their own payslips. No delete — immutable after Paid.
+
+---
+
+### `payslip_lines`
+
+| Operation | A | HM | HPU | HPM | E |
+|---|---|---|---|---|---|
+| Read (via payslip detail) | ✅ | ❌ | ✅ | ✅ | ✅(own) |
+| Create / Update | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+> Lines are system-generated during payrun computation. No manual write access.
+
+---
+
+### Quick Summary Matrix
+
+| Table | Employee | HR Manager | HR Payroll User | HR Payroll Manager | Admin |
+|---|---|---|---|---|---|
+| `users` | ❌ | ❌ | ❌ | ❌ | ✅ Full |
+| `employees` | Read | Full | Full | Full | Full |
+| `working_schedules` | Read | Full | Full | Full | Full |
+| `contracts` | ❌ | Read+Write | Read+Write (active) | Read+Write (active) | Full |
+| `attendance_records` | Check-in/out | Full | Full | Full | Full |
+| `time_off_types` | Read | Read | Read | Full | Full |
+| `time_off_allocations` | Read(own) | Full | Read | Read | Full |
+| `time_off_requests` | Own only | Full | Read | Read | Full |
+| `salary_structures` | ❌ | Read | Read | Full | Full |
+| `salary_rules` | ❌ | Read | Read | Full | Full |
+| `payruns` | ❌ | ❌ | Create+Compute | Full | Full |
+| `payslips` | Read(own) | ❌ | Read | Full | Full |
+| `payslip_lines` | Read(own) | ❌ | Read | Read | Read |
+
+---
+
+## Docker MySQL Setup & Operations
+
+### Prerequisites
+- Docker Desktop installed and running
+- Node.js 18+ installed
+- `server/.env` configured (see below)
+
+---
+
+### 1. Environment File
+
+`server/.env` — already configured for local dev:
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=peoplepay360
+DB_USER=root
+DB_PASSWORD=root
+```
+
+---
+
+### 2. Start MySQL Container
+
+```bash
+# From peoplepay360/ root
+docker compose up -d db
+```
+
+Verify it's healthy:
+```bash
+docker ps
+# peoplepay360-db-1 should show "healthy"
+```
+
+Stop the container:
+```bash
+docker compose down
+```
+
+Stop and wipe all data (full reset):
+```bash
+docker compose down -v
+```
+
+---
+
+### 3. Run Migrations
+
+Applies all `.sql` files from `database/migrations/` in order. Skips already-applied files via `_migrations` tracking table.
+
+```bash
+cd peoplepay360/server
+npx ts-node src/database/migrate.ts
+```
+
+Check which migrations have been applied:
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "SELECT filename, applied_at FROM _migrations ORDER BY filename;"
+```
+
+---
+
+### 4. Seed Demo Data
+
+Seeds all tables with realistic demo data. Safe to re-run — uses `ON DUPLICATE KEY UPDATE`.
+
+```bash
+cd peoplepay360/server
+npx ts-node src/database/seed/index.ts
+```
+
+Seeded accounts (password: `Test@1234` for all):
+
+| Role | Name | Email |
+|---|---|---|
+| Admin | Anuj Patel | anuj.patel@company.com |
+| HR Manager | Priya Sharma | priya.sharma@company.com |
+| HR Payroll Manager | Neha Desai | neha.desai@company.com |
+| HR Payroll User | Rahul Verma | rahul.verma@company.com |
+| Employee | Vikram Singh | vikram.singh@company.com |
+| Employee | Sneha Patel | sneha.patel@company.com |
+| Employee | Amit Kumar | amit.kumar@company.com |
+| Employee | Kavita Reddy | kavita.reddy@company.com |
+
+Seeded data includes:
+- 3 working schedules (Standard 40h, Part-time 20h, Flexible 35h)
+- 2 salary structures with 8 rules each (Regular + Executive)
+- 8 employees with manager hierarchy
+- 8 users (one per employee)
+- 8 running contracts
+- 4 time-off types (PTO, Sick, Casual, Unpaid)
+- 24 time-off allocations (3 types × 8 employees for 2026)
+- 3 sample time-off requests
+- 40 attendance records (5 days × 8 employees)
+- 2 payruns (Jan 2026 Paid, Feb 2026 Validated)
+- 16 payslips with full salary rule lines
+
+---
+
+### 5. Connect to MySQL Shell
+
+```bash
+# Interactive MySQL shell
+docker exec -it peoplepay360-db-1 mysql -uroot -proot peoplepay360
+```
+
+Run a one-off query without entering the shell:
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "YOUR SQL HERE;"
+```
+
+---
+
+### 6. Common Query Operations
+
+#### View all tables
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "SHOW TABLES;"
+```
+
+#### Describe a table schema
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "DESCRIBE employees;"
+```
+
+#### Count rows in all tables
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+SELECT TABLE_NAME, TABLE_ROWS
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = 'peoplepay360'
+ORDER BY TABLE_NAME;"
+```
+
+#### View all employees
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+SELECT id, employee_number, first_name, last_name, work_email, status FROM employees;"
+```
+
+#### View all users with roles
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+SELECT u.name, u.work_email, u.role, u.is_active FROM users u ORDER BY u.role;"
+```
+
+#### View all contracts
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+SELECT c.contract_ref, CONCAT(e.first_name,' ',e.last_name) AS employee,
+       c.status, c.wage, c.start_date, c.end_date
+FROM contracts c JOIN employees e ON e.id = c.employee_id;"
+```
+
+#### View time-off balances
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+SELECT CONCAT(e.first_name,' ',e.last_name) AS employee,
+       t.name AS type, a.total_days, a.used_days,
+       (a.total_days - a.used_days) AS remaining
+FROM time_off_allocations a
+JOIN employees e ON e.id = a.employee_id
+JOIN time_off_types t ON t.id = a.type_id
+ORDER BY employee, type;"
+```
+
+#### View payrun summary
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+SELECT name, period_start, period_end, status, total_gross, total_net FROM payruns;"
+```
+
+---
+
+### 7. Data Modification Operations
+
+#### Insert a new employee
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+INSERT INTO employees (id, employee_number, first_name, last_name, work_email, employment_type, hire_date, status)
+VALUES (UUID(), 'EMP-00009', 'John', 'Doe', 'john.doe@company.com', 'full_time', '2026-01-01', 'active');"
+```
+
+#### Update an employee status
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+UPDATE employees SET status = 'archived' WHERE work_email = 'john.doe@company.com';"
+```
+
+#### Reset a user password (bcrypt hash for Test@1234)
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+UPDATE users
+SET password_hash = '\$2b\$10\$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
+WHERE work_email = 'john.doe@company.com';"
+```
+
+#### Deactivate a user
+```bash
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+UPDATE users SET is_active = 0 WHERE work_email = 'john.doe@company.com';"
+```
+
+#### Delete test/specific data
+```bash
+# Delete a specific contract (only if no payslips reference it)
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+DELETE FROM contracts WHERE contract_ref = 'CTR-2025-001';"
+
+# Delete all attendance records for a date
+docker exec peoplepay360-db-1 mysql -uroot -proot peoplepay360 -e "
+DELETE FROM attendance_records WHERE date = '2025-01-01';"
+```
+
+---
+
+### 8. Wipe & Reseed (Full Reset)
+
+Wipes all data and re-runs migrations + seed from scratch:
+
+```bash
+# Step 1 — stop container and delete volume
+docker compose down -v
+
+# Step 2 — start fresh container
+docker compose up -d db
+
+# Step 3 — wait ~15 seconds for MySQL to be ready, then run migrations
+cd peoplepay360/server
+npx ts-node src/database/migrate.ts
+
+# Step 4 — seed demo data
+npx ts-node src/database/seed/index.ts
+```
+
+---
+
+### 9. Backup & Restore
+
+#### Backup database to SQL file
+```bash
+docker exec peoplepay360-db-1 mysqldump -uroot -proot peoplepay360 > backup.sql
+```
+
+#### Restore from SQL file
+```bash
+docker exec -i peoplepay360-db-1 mysql -uroot -proot peoplepay360 < backup.sql
+```
+
+---
+
+### 10. Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `ECONNREFUSED` on port 3306 | Container not running — `docker compose up -d db` |
+| `EADDRINUSE` on port 3306 | Another MySQL running locally — stop it or change `DB_PORT` in `.env` |
+| Migration skipped unexpectedly | Check `_migrations` table — row exists for that file |
+| Seed fails with FK error | Migrations not fully applied — run migrate first |
+| `Access denied for user root` | Wrong password — check `DB_PASSWORD` in `.env` matches `docker-compose.yml` |
+| Container unhealthy | Run `docker logs peoplepay360-db-1` to see MySQL startup errors |
 
 ---
 
