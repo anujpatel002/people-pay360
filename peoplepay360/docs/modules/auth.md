@@ -1,19 +1,20 @@
 # Module: auth
 
-## SRS References
+## References
 FR-001 (User Sign-In), FR-002 (Role-Based Navigation), FR-003 (Administrator User Management — provisioning side)
+Hackathon Spec §3 (User Roles), §B1 (Main Navigation)
 
 ## Overview
 Authenticates users via work email + password, establishes a role-filtered session, and enforces least-privilege access at both UI and service layers. All other modules consume the resolved `req.user` and role permissions that this module produces. No other module depends on auth internals.
 
-## Roles (SRS §3)
-| Role | Access Level |
-|------|-------------|
-| Employee | Own records only |
-| HR Manager | HR operational data |
-| HR Payroll User | Payroll read + compute |
-| HR Payroll Manager | Full payroll + config |
-| Admin | User management + all modules |
+## Roles (§3)
+| Role | Access Summary |
+|------|---------------|
+| Employee | Own records only — attendance, time off requests, own payslip |
+| HR Manager | Full CRUD on Employees, Attendance, Contracts, Working Schedules, Time Off; approve/refuse requests; no payroll |
+| HR Payroll User | All HR Manager permissions + Create/Read/Update Payruns and Payslips; read-only Salary Structures and Rules |
+| HR Payroll Manager | All HR Payroll User permissions + full CRUD on Payruns, Payslips, Salary Structures, Salary Rules |
+| Admin | Full access to all modules + user management, role assignment, system administration |
 
 ---
 
@@ -83,18 +84,82 @@ Authenticates users via work email + password, establishes a role-filtered sessi
 
 ## API Endpoints
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/api/auth/login` | Public | Validates credentials; returns access token + sets refresh cookie |
-| POST | `/api/auth/logout` | Bearer | Invalidates refresh token server-side |
-| POST | `/api/auth/refresh` | Refresh cookie | Issues new access token |
+---
+
+### POST `/api/auth/login`
+**Auth:** Public
+
+**Request Body:**
+```json
+{
+  "email": "jane.doe@company.com",
+  "password": "SecurePass123"
+}
+```
+
+**Response `200`:**
+```json
+{
+  "accessToken": "<jwt_access_token>",
+  "user": {
+    "id": "u_01",
+    "name": "Jane Doe",
+    "email": "jane.doe@company.com",
+    "role": "HR Manager",
+    "employeeId": "emp_01"
+  }
+}
+```
+`Set-Cookie: refreshToken=<token>; HttpOnly; Secure; SameSite=Strict`
+
+**Response `401`:**
+```json
+{ "error": "Invalid credentials" }
+```
+
+**Response `403`:**
+```json
+{ "error": "Account is inactive" }
+```
 
 ---
 
-## Key Rules (SRS §FR-001, FR-002)
+### POST `/api/auth/logout`
+**Auth:** Bearer token
+
+**Request Body:** _(none)_
+
+**Response `200`:**
+```json
+{ "message": "Logged out successfully" }
+```
+
+---
+
+### POST `/api/auth/refresh`
+**Auth:** Refresh cookie (httpOnly)
+
+**Request Body:** _(none)_
+
+**Response `200`:**
+```json
+{
+  "accessToken": "<new_jwt_access_token>"
+}
+```
+
+**Response `401`:**
+```json
+{ "error": "Refresh token expired or invalid" }
+```
+
+---
+
+## Key Rules
 - Invalid credentials or inactive account → clear non-sensitive error, form retained (FR-001)
 - Role is embedded in JWT payload — no extra DB call per request (FR-002)
 - Access token in memory only; refresh token in httpOnly cookie — renderer never touches raw token storage
-- Unauthorized API calls return 401/403 without leaking data — renderer-side permission checks are UX only, not authoritative (SRS §2.3.1)
+- Unauthorized API calls return 401/403 without leaking data — renderer-side permission checks are UX only, not authoritative
 - `auth.middleware.ts` and `role-guard.middleware.ts` in `server/src/middleware/` own per-request enforcement — this module only issues and validates tokens
+- Top navigation (§B1) exposes: Employees, Contracts, Attendance, Time Off, Payroll, Reports — rendered based on role after successful login
 - Session expiry, disabled user, and multiple role records are handled at service level (FR-001 edge cases)

@@ -1,10 +1,11 @@
 # Module: time-off
 
-## SRS References
+## References
 FR-018 (Navigation), FR-019 (Type Configuration), FR-020 (Allocation), FR-021 (Request Creation), FR-022 (Approval/Refusal), FR-023 (Balance View)
+Hackathon Spec §A4 (Time Off Type & Allocation Setup), §B4 (Time Off Requests)
 
 ## Overview
-Manages the full leave lifecycle: configurable Time Off Types → employee Allocations → leave Requests → approval/refusal workflow → balance deduction. Navigation is grouped under a Time Off dropdown (not separate top-level items). Depends on `employees`. `payroll` reads approved requests via repository for paid/unpaid leave computation.
+Manages the full leave lifecycle: configurable Time Off Types → employee Allocations → leave Requests → approval/refusal workflow → balance deduction. Navigation is grouped under a Time Off dropdown in the top nav (not separate top-level items). Time Off Types define leave policies including units, allocation requirements, approval workflows, and payroll integration. Allocations manage employee balances, requiring approval before availability. Approved leave requests automatically deduct from assigned allocations. Depends on `employees`. `payroll` reads approved requests via repository for paid/unpaid leave computation.
 
 ---
 
@@ -13,16 +14,16 @@ Manages the full leave lifecycle: configurable Time Off Types → employee Alloc
 ### Components
 | File | Responsibility |
 |------|---------------|
-| `components/BalanceIndicator.tsx` | Shows Allocated / Taken / Remaining per leave type for an employee (FR-023) |
-| `components/ApprovalActions.tsx` | Approve / Refuse buttons with optional refusal reason input — visible only to authorized approvers (FR-022) |
+| `components/BalanceIndicator.tsx` | Shows Allocated / Taken / Remaining per leave type for an employee (FR-023, §A4) |
+| `components/ApprovalActions.tsx` | Approve / Refuse buttons with optional refusal reason input — visible only to authorized approvers (FR-022, §B4) |
 
 ### Pages
 | File | Responsibility |
 |------|---------------|
-| `pages/RequestListPage.tsx` | All leave requests — Employee, Type, Start, End, Duration, Status; filter by employee/type/status/date range (FR-021) |
-| `pages/RequestFormPage.tsx` | Submit request — Type, Start Date, End Date, Duration (auto-computed), Reason; balance check shown inline (FR-021) |
-| `pages/AllocationListPage.tsx` | HR view — Employee, Type, Allocated, Taken, Remaining, Validity, Approver, Status (FR-020) |
-| `pages/TypeConfigPage.tsx` | Configure leave types — Name, Unit (days/hours), Allocation Required, Approval behavior, Active, Work Entry, Color, Notes (FR-019) |
+| `pages/RequestListPage.tsx` | All leave requests — Employee, Type, Start Date, End Date, Duration, Status; filter by employee/type/status/date range (FR-021, §B4) |
+| `pages/RequestFormPage.tsx` | Submit request — Type, Start Date, End Date, Duration (auto-computed), Reason; balance check shown inline; approval or refusal workflow (FR-021, §B4) |
+| `pages/AllocationListPage.tsx` | HR view — Employee, Type, Allocated, Taken, Remaining, Validity, Approver, Status; tracks detailed metrics (FR-020, §A4) |
+| `pages/TypeConfigPage.tsx` | Configure leave types — Name, Unit (days/hours), Allocation Required, Approval behavior, Active, Work Entry, Color, Notes (FR-019, §A4) |
 
 ### Hooks
 | File | Responsibility |
@@ -55,7 +56,7 @@ Manages the full leave lifecycle: configurable Time Off Types → employee Alloc
 | File | Responsibility |
 |------|---------------|
 | `services/time-off.service.ts` | Orchestrates request lifecycle — validates balance sufficiency before submission, calls balance service on approval/refusal |
-| `services/allocation-balance.service.ts` | Atomic balance operations — deduct `days` from allocation on approval; restore on refusal or cancellation; uses DB transaction to prevent partial state (SRS §17 recommendation) |
+| `services/allocation-balance.service.ts` | Atomic balance operations — deduct `days` from allocation on approval; restore on refusal or cancellation; uses DB transaction to prevent partial state |
 
 ### Repositories
 | File | Responsibility |
@@ -91,33 +92,324 @@ Manages the full leave lifecycle: configurable Time Off Types → employee Alloc
 
 ## API Endpoints
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/time-off/types` | HR Manager+ | All leave types |
-| POST | `/api/time-off/types` | HR Payroll Manager | Create leave type |
-| PUT | `/api/time-off/types/:id` | HR Payroll Manager | Update leave type |
-| GET | `/api/time-off/allocations` | HR Manager+ | Allocations (filter by employeeId, year) |
-| POST | `/api/time-off/allocations` | HR Manager | Create allocation |
-| GET | `/api/time-off/requests` | HR Manager+ / Employee (own) | Leave requests with filters |
-| POST | `/api/time-off/requests` | Employee+ | Submit leave request |
-| PUT | `/api/time-off/requests/:id/approve` | HR Manager | Approve — deducts balance |
-| PUT | `/api/time-off/requests/:id/refuse` | HR Manager | Refuse with reason — no balance change |
-| GET | `/api/time-off/balance/:employeeId` | HR Manager+ / Employee (own) | Remaining balances by type |
+---
+
+### GET `/api/time-off/types`
+**Auth:** HR Manager+
+
+**Response `200`:**
+```json
+{
+  "data": [
+    {
+      "id": "tot_01",
+      "name": "Annual Leave",
+      "unit": "days",
+      "allocationRequired": true,
+      "approvalMode": "time_off",
+      "isPaid": true,
+      "workEntry": "leave",
+      "color": "#4CAF50",
+      "isActive": true,
+      "notes": ""
+    }
+  ],
+  "total": 6
+}
+```
 
 ---
 
-## Navigation (SRS §FR-018)
+### POST `/api/time-off/types`
+**Auth:** HR Payroll Manager
+
+**Request Body:**
+```json
+{
+  "name": "Annual Leave",
+  "unit": "days",
+  "allocationRequired": true,
+  "approvalMode": "time_off",
+  "isPaid": true,
+  "workEntry": "leave",
+  "color": "#4CAF50",
+  "notes": ""
+}
+```
+
+**Response `201`:**
+```json
+{
+  "id": "tot_01",
+  "name": "Annual Leave",
+  "unit": "days",
+  "allocationRequired": true,
+  "isActive": true,
+  "createdAt": "2024-01-01T08:00:00Z"
+}
+```
+
+**Response `422`:**
+```json
+{ "error": "name and unit are required" }
+```
+
+---
+
+### PUT `/api/time-off/types/:id`
+**Auth:** HR Payroll Manager
+
+**Request Body:** _(all fields optional)_
+```json
+{
+  "name": "Annual Leave (Updated)",
+  "isActive": false
+}
+```
+
+**Response `200`:**
+```json
+{
+  "id": "tot_01",
+  "name": "Annual Leave (Updated)",
+  "isActive": false,
+  "updatedAt": "2024-03-10T11:00:00Z"
+}
+```
+
+---
+
+### GET `/api/time-off/allocations`
+**Auth:** HR Manager+
+
+**Query Params:** `?employeeId=emp_01&year=2024`
+
+**Response `200`:**
+```json
+{
+  "data": [
+    {
+      "id": "alloc_01",
+      "employeeId": "emp_01",
+      "employeeName": "John Smith",
+      "typeId": "tot_01",
+      "typeName": "Annual Leave",
+      "year": 2024,
+      "totalDays": 21,
+      "usedDays": 5,
+      "remainingDays": 16,
+      "validityStart": "2024-01-01",
+      "validityEnd": "2024-12-31",
+      "approverId": "u_05",
+      "approverName": "HR Manager",
+      "status": "Approved"
+    }
+  ],
+  "total": 3
+}
+```
+
+---
+
+### POST `/api/time-off/allocations`
+**Auth:** HR Manager
+
+**Request Body:**
+```json
+{
+  "employeeId": "emp_01",
+  "typeId": "tot_01",
+  "year": 2024,
+  "totalDays": 21,
+  "validityStart": "2024-01-01",
+  "validityEnd": "2024-12-31"
+}
+```
+
+**Response `201`:**
+```json
+{
+  "id": "alloc_01",
+  "employeeId": "emp_01",
+  "typeId": "tot_01",
+  "year": 2024,
+  "totalDays": 21,
+  "usedDays": 0,
+  "status": "Approved",
+  "createdAt": "2024-01-01T08:00:00Z"
+}
+```
+
+**Response `422`:**
+```json
+{ "error": "employeeId, typeId, totalDays, and validity dates are required" }
+```
+
+---
+
+### GET `/api/time-off/requests`
+**Auth:** HR Manager+ / Employee (own)
+
+**Query Params:** `?employeeId=emp_01&typeId=tot_01&status=Approved&dateFrom=2024-03-01&dateTo=2024-03-31&page=1&limit=20`
+
+**Response `200`:**
+```json
+{
+  "data": [
+    {
+      "id": "req_01",
+      "employeeId": "emp_01",
+      "employeeName": "John Smith",
+      "typeId": "tot_01",
+      "typeName": "Annual Leave",
+      "allocationId": "alloc_01",
+      "startDate": "2024-03-18",
+      "endDate": "2024-03-22",
+      "days": 5,
+      "status": "Approved",
+      "reason": "Family vacation",
+      "refusalReason": null,
+      "createdAt": "2024-03-01T10:00:00Z"
+    }
+  ],
+  "total": 7,
+  "page": 1,
+  "limit": 20
+}
+```
+
+---
+
+### POST `/api/time-off/requests`
+**Auth:** Employee+
+
+**Request Body:**
+```json
+{
+  "typeId": "tot_01",
+  "startDate": "2024-03-18",
+  "endDate": "2024-03-22",
+  "days": 5,
+  "reason": "Family vacation"
+}
+```
+
+**Response `201`:**
+```json
+{
+  "id": "req_01",
+  "employeeId": "emp_01",
+  "typeId": "tot_01",
+  "startDate": "2024-03-18",
+  "endDate": "2024-03-22",
+  "days": 5,
+  "status": "Confirmed",
+  "reason": "Family vacation",
+  "createdAt": "2024-03-01T10:00:00Z"
+}
+```
+
+**Response `422`:**
+```json
+{ "error": "Insufficient leave balance. Available: 3 days, Requested: 5 days" }
+```
+
+---
+
+### PUT `/api/time-off/requests/:id/approve`
+**Auth:** HR Manager
+
+**Request Body:** _(none)_
+
+**Response `200`:**
+```json
+{
+  "id": "req_01",
+  "status": "Approved",
+  "allocationId": "alloc_01",
+  "remainingBalance": 16,
+  "updatedAt": "2024-03-05T09:00:00Z"
+}
+```
+
+**Response `422`:**
+```json
+{ "error": "Insufficient allocation balance to approve this request" }
+```
+
+---
+
+### PUT `/api/time-off/requests/:id/refuse`
+**Auth:** HR Manager
+
+**Request Body:**
+```json
+{
+  "refusalReason": "Insufficient team coverage during this period"
+}
+```
+
+**Response `200`:**
+```json
+{
+  "id": "req_01",
+  "status": "Refused",
+  "refusalReason": "Insufficient team coverage during this period",
+  "updatedAt": "2024-03-05T09:00:00Z"
+}
+```
+
+---
+
+### GET `/api/time-off/balance/:employeeId`
+**Auth:** HR Manager+ / Employee (own)
+
+**Response `200`:**
+```json
+{
+  "employeeId": "emp_01",
+  "balances": [
+    {
+      "typeId": "tot_01",
+      "typeName": "Annual Leave",
+      "unit": "days",
+      "allocated": 21,
+      "taken": 5,
+      "remaining": 16,
+      "validityEnd": "2024-12-31"
+    },
+    {
+      "typeId": "tot_02",
+      "typeName": "Sick Leave",
+      "unit": "days",
+      "allocated": null,
+      "taken": 2,
+      "remaining": null,
+      "validityEnd": null
+    }
+  ]
+}
+```
+
+---
+
+## Navigation (§A4, §B4, FR-018)
 Time Off dropdown in top nav exposes three sub-areas:
-- Time Off ▼ → Requests
+- Time Off ▼ → Requests (accessed exclusively via this path — §B4)
 - Time Off ▼ → Allocations
 - Time Off ▼ → Time Off Types
 
-## Key Rules (SRS §FR-018–023)
-- Balance deduction is atomic — uses DB transaction to prevent partial state on concurrent approvals (SRS §17)
+## Key Rules (§A4, §B4, FR-018–023)
+- Time Off is accessible via the main navigation dropdown, housing Requests, Allocations, and configured Time Off Types (§A4)
+- Requests are accessed exclusively via Time Off → Requests in the top navigation (§B4)
+- Request List provides an overview of Employee, Type, Dates, Duration, and Status (§B4)
+- Request Form details the request and supports a simple approval or refusal workflow (§B4)
+- Approved requests automatically reduce balances for leave types requiring allocation (§B4)
+- Allocations require approval before availability and track Allocated, Taken, Remaining, and validity periods (§A4)
+- Balance deduction is atomic — uses DB transaction to prevent partial state on concurrent approvals
 - Deduction happens only on approval, not on submission (FR-022)
 - Refusal and cancellation of an approved request restore the balance (FR-022)
 - An employee cannot request more days than their remaining allocation — validated at service level before submission (FR-021)
 - Non-allocation leave types (allocationRequired = false) show N/A for balance (FR-023 edge case)
 - Employee role sees only own requests and balances; HR Manager sees all (FR-023)
-- Changing leave type policy after requests exist is an edge case — existing approved requests are not retroactively affected (FR-019 edge case)
 - `payroll` reads approved requests via repository — this module does not push data to payroll
