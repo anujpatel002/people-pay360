@@ -11,6 +11,10 @@ import ContractListPage from '@/features/contracts/pages/ContractListPage';
 import ContractFormPage from '@/features/contracts/pages/ContractFormPage';
 import AttendanceListPage from '@/features/attendance/pages/AttendanceListPage';
 import AttendanceFormPage from '@/features/attendance/pages/AttendanceFormPage';
+import TypeConfigPage from '@/features/time-off/pages/TypeConfigPage';
+import AllocationListPage from '@/features/time-off/pages/AllocationListPage';
+import RequestListPage from '@/features/time-off/pages/RequestListPage';
+import RequestFormPage from '@/features/time-off/pages/RequestFormPage';
 
 export default function AppRouter() {
   return (
@@ -30,6 +34,10 @@ export default function AppRouter() {
           <Route path="/contracts/:id" element={<ContractFormPage />} />
           <Route path="/attendance" element={<AttendanceListPage />} />
           <Route path="/attendance/:id" element={<AttendanceFormPage />} />
+          <Route path="/time-off/types" element={<TypeConfigPage />} />
+          <Route path="/time-off/allocations" element={<AllocationListPage />} />
+          <Route path="/time-off/requests" element={<RequestListPage />} />
+          <Route path="/time-off/requests/new" element={<RequestFormPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
