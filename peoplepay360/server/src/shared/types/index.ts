@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 
 export type UserRole =
   | 'Employee'
@@ -18,6 +18,9 @@ export interface AuthUser {
 export interface RequestWithUser extends Request {
   user: AuthUser;
 }
+
+export type Handler = (req: RequestWithUser, res: Response, next: NextFunction) => void | Promise<void>;
+export type RH = RequestHandler;
 
 export interface PaginatedResult<T> {
   data: T[];

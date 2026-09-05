@@ -1,3 +1,5 @@
+import { RowDataPacket } from 'mysql2';
+import pool from '../../../database/connection/pool';
 import * as repo from '../repositories/employees.repository';
 import { Employee, EmployeeFilters, SmartCounts } from '../types/employee.types';
 import { PaginatedResult } from '../../../shared/types';
@@ -18,20 +20,13 @@ export async function getSmartCounts(id: string): Promise<SmartCounts> {
   return repo.countRelated(id);
 }
 
-export async function createEmployee(
-  data: Record<string, unknown>,
-  actorId: string
-): Promise<Employee> {
+export async function createEmployee(data: Record<string, unknown>, actorId: string): Promise<Employee> {
   await validateEmail(data.workEmail as string, null);
   if (data.managerId) await validateManager(data.managerId as string, null);
   return repo.create({ ...data, createdBy: actorId });
 }
 
-export async function updateEmployee(
-  id: string,
-  data: Record<string, unknown>,
-  actorId: string
-): Promise<Employee> {
+export async function updateEmployee(id: string, data: Record<string, unknown>, actorId: string): Promise<Employee> {
   const existing = await getEmployee(id);
   if (existing.status === 'archived') throw new ValidationError('Cannot update an archived employee');
 
@@ -92,12 +87,10 @@ async function detectCycle(employeeId: string, managerId: string): Promise<void>
 }
 
 async function checkOpenPayrun(employeeId: string): Promise<void> {
-  const { RowDataPacket } = await import('mysql2');
-  const pool = (await import('../../../database/connection/pool')).default;
-
   const [[row]] = await pool.execute<(RowDataPacket & { cnt: number })[]>(
-    `SELECT COUNT(*) AS cnt FROM payruns
-     WHERE employee_id = ? AND status NOT IN ('closed', 'cancelled')`,
+    `SELECT COUNT(*) AS cnt FROM payslips p
+     JOIN payruns pr ON pr.id = p.payrun_id
+     WHERE p.employee_id = ? AND pr.status NOT IN ('Paid')`,
     [employeeId]
   );
 

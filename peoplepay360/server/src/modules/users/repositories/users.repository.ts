@@ -25,28 +25,20 @@ export async function findAll(filters: UserFilters): Promise<{ rows: UserRow[]; 
   const { search, role, page, limit } = filters;
   const offset = (page - 1) * limit;
   const conditions: string[] = [];
-  const params: unknown[] = [];
+  const params: any[]        = [];
 
-  if (search) {
-    conditions.push('(u.name LIKE ? OR u.work_email LIKE ?)');
-    params.push(`%${search}%`, `%${search}%`);
-  }
-  if (role) {
-    conditions.push('u.role = ?');
-    params.push(role);
-  }
+  if (search) { conditions.push('(u.name LIKE ? OR u.work_email LIKE ?)'); params.push(`%${search}%`, `%${search}%`); }
+  if (role)   { conditions.push('u.role = ?'); params.push(role); }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const [countRows] = await pool.execute<RowDataPacket[]>(
-    `SELECT COUNT(*) AS total FROM users u ${where}`,
-    params
+    `SELECT COUNT(*) AS total FROM users u ${where}`, params
   );
   const total = (countRows[0] as RowDataPacket).total as number;
 
   const [rows] = await pool.execute<UserRow[]>(
-    `SELECT u.id, u.employee_id, e.first_name, e.last_name,
-            CONCAT(e.first_name, ' ', e.last_name) AS employee_name,
+    `SELECT u.id, u.employee_id, CONCAT(e.first_name, ' ', e.last_name) AS employee_name,
             u.name, u.work_email, u.role, u.is_active, u.created_at, u.updated_at
      FROM users u
      JOIN employees e ON e.id = u.employee_id
@@ -73,28 +65,22 @@ export async function findById(id: string): Promise<UserRow | null> {
 
 export async function findByEmail(email: string): Promise<UserRow | null> {
   const [rows] = await pool.execute<UserRow[]>(
-    'SELECT id, work_email FROM users WHERE work_email = ?',
-    [email]
+    'SELECT id, work_email FROM users WHERE work_email = ?', [email]
   );
   return rows[0] ?? null;
 }
 
 export async function findByEmployeeId(employeeId: string): Promise<UserRow | null> {
   const [rows] = await pool.execute<UserRow[]>(
-    'SELECT id FROM users WHERE employee_id = ?',
-    [employeeId]
+    'SELECT id FROM users WHERE employee_id = ?', [employeeId]
   );
   return rows[0] ?? null;
 }
 
 export async function create(data: {
-  name: string;
-  workEmail: string;
-  passwordHash: string;
-  role: string;
-  employeeId: string;
+  name: string; workEmail: string; passwordHash: string; role: string; employeeId: string;
 }): Promise<string> {
-  const id = require('crypto').randomUUID() as string;
+  const id = crypto.randomUUID();
   await pool.execute<ResultSetHeader>(
     `INSERT INTO users (id, employee_id, name, work_email, password_hash, role, is_active)
      VALUES (?, ?, ?, ?, ?, ?, 1)`,
@@ -103,15 +89,12 @@ export async function create(data: {
   return id;
 }
 
-export async function update(
-  id: string,
-  data: { name?: string; role?: string; isActive?: boolean }
-): Promise<void> {
+export async function update(id: string, data: { name?: string; role?: string; isActive?: boolean }): Promise<void> {
   const fields: string[] = [];
-  const params: unknown[] = [];
+  const params: any[]    = [];
 
-  if (data.name !== undefined) { fields.push('name = ?'); params.push(data.name); }
-  if (data.role !== undefined) { fields.push('role = ?'); params.push(data.role); }
+  if (data.name     !== undefined) { fields.push('name = ?');      params.push(data.name); }
+  if (data.role     !== undefined) { fields.push('role = ?');      params.push(data.role); }
   if (data.isActive !== undefined) { fields.push('is_active = ?'); params.push(data.isActive ? 1 : 0); }
 
   if (!fields.length) return;
@@ -128,8 +111,7 @@ export async function countActiveAdmins(): Promise<number> {
 
 export async function employeeExists(employeeId: string): Promise<boolean> {
   const [rows] = await pool.execute<RowDataPacket[]>(
-    'SELECT id FROM employees WHERE id = ? AND status = ?',
-    [employeeId, 'active']
+    'SELECT id FROM employees WHERE id = ? AND status = ?', [employeeId, 'active']
   );
-  return (rows as RowDataPacket[]).length > 0;
+  return rows.length > 0;
 }

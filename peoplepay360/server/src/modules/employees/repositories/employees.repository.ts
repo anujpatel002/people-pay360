@@ -27,11 +27,11 @@ export async function findAll(filters: EmployeeFilters): Promise<PaginatedResult
     page = 1, limit: rawLimit = 20,
   } = filters;
 
-  const limit = Math.min(Math.max(rawLimit, 1), 100);
+  const limit  = Math.min(Math.max(rawLimit, 1), 100);
   const offset = (Math.max(page, 1) - 1) * limit;
 
   const conditions: string[] = [];
-  const params: unknown[] = [];
+  const params: any[]        = [];
 
   if (search) {
     conditions.push(
@@ -55,8 +55,7 @@ export async function findAll(filters: EmployeeFilters): Promise<PaginatedResult
   const dir   = sortOrder === 'desc' ? 'DESC' : 'ASC';
 
   const [[{ total }]] = await pool.execute<(RowDataPacket & { total: number })[]>(
-    `SELECT COUNT(*) AS total FROM employees ${where}`,
-    params
+    `SELECT COUNT(*) AS total FROM employees ${where}`, params
   );
 
   const [rows] = await pool.execute<EmployeeRow[]>(
@@ -81,10 +80,8 @@ export async function findByEmail(email: string): Promise<Employee | null> {
   return rows[0] ? toEmployee(rows[0]) : null;
 }
 
-export async function create(
-  data: Record<string, unknown>
-): Promise<Employee> {
-  const id = crypto.randomUUID();
+export async function create(data: Record<string, unknown>): Promise<Employee> {
+  const id     = crypto.randomUUID();
   const empNum = `EMP-${String(Math.floor(Math.random() * 90000) + 10000)}`;
 
   await pool.execute<ResultSetHeader>(
@@ -105,16 +102,13 @@ export async function create(
       data.scheduleId ?? null, data.hireDate,
       data.bankAccount ?? null, data.iban ?? null, data.swift ?? null,
       data.createdBy ?? null,
-    ]
+    ] as any[]
   );
 
   return (await findById(id))!;
 }
 
-export async function update(
-  id: string,
-  data: Record<string, unknown>
-): Promise<Employee> {
+export async function update(id: string, data: Record<string, unknown>): Promise<Employee> {
   const fieldMap: Record<string, string> = {
     firstName: 'first_name', lastName: 'last_name', workEmail: 'work_email',
     phone: 'phone', privateAddress: 'private_address',
@@ -128,13 +122,10 @@ export async function update(
   };
 
   const sets: string[] = [];
-  const params: unknown[] = [];
+  const params: any[]  = [];
 
   for (const [key, col] of Object.entries(fieldMap)) {
-    if (key in data) {
-      sets.push(`${col} = ?`);
-      params.push(data[key] ?? null);
-    }
+    if (key in data) { sets.push(`${col} = ?`); params.push(data[key] ?? null); }
   }
 
   if (!sets.length) return (await findById(id))!;
@@ -166,9 +157,9 @@ export async function countRelated(id: string): Promise<SmartCounts> {
     contracts: number; attendance: number; timeOff: number; allocations: number;
   })[]>(
     `SELECT
-       (SELECT COUNT(*) FROM contracts          WHERE employee_id = ?) AS contracts,
-       (SELECT COUNT(*) FROM attendance_records WHERE employee_id = ?) AS attendance,
-       (SELECT COUNT(*) FROM time_off_requests  WHERE employee_id = ?) AS timeOff,
+       (SELECT COUNT(*) FROM contracts            WHERE employee_id = ?) AS contracts,
+       (SELECT COUNT(*) FROM attendance_records   WHERE employee_id = ?) AS attendance,
+       (SELECT COUNT(*) FROM time_off_requests    WHERE employee_id = ?) AS timeOff,
        (SELECT COUNT(*) FROM time_off_allocations WHERE employee_id = ?) AS allocations`,
     [id, id, id, id]
   );
