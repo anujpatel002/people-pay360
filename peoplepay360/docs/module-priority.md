@@ -22,36 +22,36 @@ auth → users → employees → contracts → working-schedules
 
 | Priority | Module | Teammate |
 |----------|--------|----------|
-| 1 | **auth** | Teammate A |
-| 2 | **users** | Teammate B |
-| 3 | **employees** | Teammate C |
-| 4 | **contracts** | Teammate A |
-| 5 | **working-schedules** | Teammate B |
-| 6 | **attendance** | Teammate C |
-| 7 | **time-off** | Teammate A |
-| 8 | **payroll-config** | Teammate B |
-| 9 | **payroll** | Teammate C |
-| 10 | **dashboard** | Teammate A |
+| 1 | **auth** | Anuj Patel |
+| 2 | **users** | Ahmedabbas Momin |
+| 3 | **employees** | Tirth Mantri |
+| 4 | **contracts** | Anuj Patel |
+| 5 | **working-schedules** | Ahmedabbas Momin |
+| 6 | **attendance** | Tirth Mantri |
+| 7 | **time-off** | Anuj Patel |
+| 8 | **payroll-config** | Ahmedabbas Momin |
+| 9 | **payroll** | Tirth Mantri |
+| 10 | **dashboard** | Anuj Patel |
 
 ---
 
 ## Per-Teammate Summary
 
-### Teammate A — auth · contracts · time-off · dashboard
+### Anuj Patel — auth · contracts · time-off · dashboard
 - Starts immediately with `auth` (no dependencies)
-- `contracts` unblocks after Teammate C finishes `employees`
-- `time-off` unblocks after Teammate C finishes `attendance`
+- `contracts` unblocks after Tirth Mantri finishes `employees`
+- `time-off` unblocks after Tirth Mantri finishes `attendance`
 - `dashboard` is last — read-only aggregator, unblocks after all modules are done
 
-### Teammate B — users · working-schedules · payroll-config
+### Ahmedabbas Momin — users · working-schedules · payroll-config
 - Starts with `users` right after `auth` is done
-- `working-schedules` unblocks after Teammate A finishes `contracts`
-- `payroll-config` unblocks after Teammate A finishes `time-off`
+- `working-schedules` unblocks after Anuj Patel finishes `contracts`
+- `payroll-config` unblocks after Anuj Patel finishes `time-off`
 
-### Teammate C — employees · attendance · payroll
-- Starts with `employees` right after `auth` is done (parallel with Teammate B)
-- `attendance` unblocks after Teammate B finishes `working-schedules`
-- `payroll` unblocks after Teammate B finishes `payroll-config`
+### Tirth Mantri — employees · attendance · payroll
+- Starts with `employees` right after `auth` is done (parallel with Ahmedabbas Momin)
+- `attendance` unblocks after Ahmedabbas Momin finishes `working-schedules`
+- `payroll` unblocks after Ahmedabbas Momin finishes `payroll-config`
 
 ---
 
@@ -59,9 +59,9 @@ auth → users → employees → contracts → working-schedules
 
 | Teammate | Week 1 | Week 2 | Week 3 | Week 4 |
 |----------|--------|--------|--------|--------|
-| A | auth | contracts | time-off | dashboard |
-| B | users | working-schedules | payroll-config | — |
-| C | employees | attendance | payroll | — |
+| Anuj Patel | auth | contracts | time-off | dashboard |
+| Ahmedabbas Momin | users | working-schedules | payroll-config | — |
+| Tirth Mantri | employees | attendance | payroll | — |
 
 ---
 
