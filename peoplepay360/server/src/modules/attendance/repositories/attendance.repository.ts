@@ -4,6 +4,12 @@ import { AttendanceRow, toAttendance, Attendance, AttendanceStatus } from '../mo
 import { AttendanceFilters } from '../types/attendance.types';
 import { PaginatedResult } from '../../../shared/types';
 
+function toMysqlDatetime(d: Date | string | null | undefined): string | null {
+  if (!d) return null;
+  const date = typeof d === 'string' ? new Date(d) : d;
+  return date.toISOString().slice(0, 19).replace('T', ' ');
+}
+
 const BASE_SELECT = `
   SELECT
     a.*,
@@ -181,8 +187,8 @@ export async function create(data: {
       data.employeeId,
       data.scheduleId ?? null,
       data.date,
-      data.checkIn,
-      data.checkOut ?? null,
+      toMysqlDatetime(data.checkIn),
+      toMysqlDatetime(data.checkOut ?? null),
       data.workedMinutes ?? null,
       data.overtimeMinutes ?? 0,
       data.scheduledMinutes ?? null,
@@ -191,7 +197,7 @@ export async function create(data: {
       data.isManualEntry ? 1 : 0,
       data.correctionReason ?? null,
       data.correctedBy ?? null,
-      data.correctedAt ?? null,
+      toMysqlDatetime(data.correctedAt ?? null),
     ] as any[]
   );
 
@@ -223,6 +229,9 @@ export async function update(id: string, data: Record<string, unknown>): Promise
       sets.push(`${col} = ?`);
       let val = data[key];
       if (typeof val === 'boolean') val = val ? 1 : 0;
+      // Convert Date/ISO string to MySQL DATETIME format
+      if (val instanceof Date) val = toMysqlDatetime(val);
+      else if (typeof val === 'string' && ['checkIn','checkOut','correctedAt'].includes(key)) val = toMysqlDatetime(val);
       params.push(val ?? null);
     }
   }

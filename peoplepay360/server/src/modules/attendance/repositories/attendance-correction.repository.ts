@@ -14,6 +14,12 @@ const BASE_SELECT = `
   LEFT JOIN users u ON u.id = c.corrected_by
 `;
 
+function toMysqlDatetime(d: Date | string | null): string | null {
+  if (!d) return null;
+  const date = typeof d === 'string' ? new Date(d) : d;
+  return date.toISOString().slice(0, 19).replace('T', ' ');
+}
+
 export async function create(data: {
   id?: string;
   attendanceId: string;
@@ -44,19 +50,19 @@ export async function create(data: {
     [
       id,
       data.attendanceId,
-      data.originalCheckIn,
-      data.originalCheckOut ?? null,
+      toMysqlDatetime(data.originalCheckIn),
+      toMysqlDatetime(data.originalCheckOut),
       data.originalWorkedMinutes ?? null,
       data.originalOvertimeMinutes ?? 0,
       data.originalStatus,
-      data.correctedCheckIn,
-      data.correctedCheckOut ?? null,
+      toMysqlDatetime(data.correctedCheckIn),
+      toMysqlDatetime(data.correctedCheckOut),
       data.correctedWorkedMinutes ?? null,
       data.correctedOvertimeMinutes ?? 0,
       data.correctedStatus,
       data.correctionReason,
       data.correctedBy,
-      correctedAt,
+      toMysqlDatetime(correctedAt),
     ] as any[]
   );
 

@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS attendance_records (
       is_manual_entry = 1
       AND correction_reason IS NOT NULL
       AND LENGTH(TRIM(correction_reason)) > 0
-      AND corrected_by IS NOT NULL
       AND corrected_at IS NOT NULL
     )
   ),
