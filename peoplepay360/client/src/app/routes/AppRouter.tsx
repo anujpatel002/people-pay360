@@ -7,6 +7,8 @@ import UsersListPage from '@/features/users/pages/UsersListPage';
 import UserFormPage from '@/features/users/pages/UserFormPage';
 import ScheduleListPage from '@/features/working-schedules/pages/ScheduleListPage';
 import ScheduleFormPage from '@/features/working-schedules/pages/ScheduleFormPage';
+import SalaryStructureListPage from '@/features/payroll-config/pages/SalaryStructureListPage';
+import SalaryStructureFormPage from '@/features/payroll-config/pages/SalaryStructureFormPage';
 import ProtectedRoute from './ProtectedRoute';
 import EmployeeKanbanPage from '@/features/employees/pages/EmployeeKanbanPage';
 import EmployeeFormPage from '@/features/employees/pages/EmployeeFormPage';
@@ -52,6 +54,8 @@ export default function AppRouter() {
             </Route>
 
             <Route element={<RoleGate roles={PAYROLL_ROLES} />}>
+              <Route path="/payroll-config/structures" element={<SalaryStructureListPage />} />
+              <Route path="/payroll-config/structures/:id" element={<SalaryStructureFormPage />} />
               <Route path="/payroll" element={<PayrunListPage />} />
               <Route path="/payroll/new" element={<PayrunWizardPage />} />
               <Route path="/payroll/:id" element={<PayrunProcessingPage />} />
