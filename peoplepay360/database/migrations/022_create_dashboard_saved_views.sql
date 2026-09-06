@@ -27,4 +27,4 @@ CREATE TABLE IF NOT EXISTS dashboard_saved_views (
     FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
   CONSTRAINT fk_saved_view_employment_type
     FOREIGN KEY (employment_type_id) REFERENCES employment_type(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -33,6 +33,9 @@ function toDTO(row: repo.UserRow): UserDTO {
 export async function getUsers(filters: {
   search?: string;
   role?: string;
+  status?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
   page?: number;
   limit?: number;
 }) {
@@ -52,10 +55,10 @@ export async function createUser(input: CreateUserInput): Promise<UserDTO> {
   const existing = await repo.findByEmail(input.workEmail);
   if (existing) throw new ValidationError('Email already in use');
 
-  const empExists = await repo.employeeExists(input.employeeId);
-  if (!empExists) throw new ValidationError('employeeId does not reference an active employee');
+  const emp = await repo.resolveEmployee(input.employeeId);
+  if (!emp) throw new ValidationError('employeeId does not reference an active employee');
 
-  const alreadyLinked = await repo.findByEmployeeId(input.employeeId);
+  const alreadyLinked = await repo.findByEmployeeId(emp.id);
   if (alreadyLinked) throw new ValidationError('This employee already has a user account');
 
   const passwordHash = await hashPassword(input.password);
@@ -64,7 +67,7 @@ export async function createUser(input: CreateUserInput): Promise<UserDTO> {
     workEmail: input.workEmail,
     passwordHash,
     role: input.role,
-    employeeId: input.employeeId,
+    employeeId: emp.id,
   });
 
   const row = await repo.findById(id);
@@ -84,16 +87,15 @@ export async function updateUser(
     throw new ForbiddenError('Cannot elevate own role');
   }
 
-  // Last active admin guard
+  // Admin deactivation guard
   if (input.isActive === false && existing.role === 'Admin') {
-    const adminCount = await repo.countActiveAdmins();
-    if (adminCount <= 1) throw new ForbiddenError('Cannot deactivate the last active Admin');
+    throw new ForbiddenError('System Administrator accounts are protected and cannot be deactivated');
   }
 
   await repo.update(id, {
     name: input.name,
     role: input.role,
-    isActive: input.isActive,
+    isActive: existing.role === 'Admin' ? true : input.isActive,
   });
 
   const updated = await repo.findById(id);
@@ -107,8 +109,7 @@ export async function deactivateUser(id: string, requestingUser: AuthUser): Prom
   if (requestingUser.id === id) throw new ForbiddenError('Cannot deactivate own account');
 
   if (existing.role === 'Admin') {
-    const adminCount = await repo.countActiveAdmins();
-    if (adminCount <= 1) throw new ForbiddenError('Cannot deactivate the last active Admin');
+    throw new ForbiddenError('System Administrator accounts are protected and cannot be deactivated');
   }
 
   await repo.update(id, { isActive: false });

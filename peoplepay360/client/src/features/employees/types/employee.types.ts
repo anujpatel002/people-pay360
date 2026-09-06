@@ -96,3 +96,20 @@ export interface EmployeeFilters {
   page?: number;
   limit?: number;
 }
+
+export interface EmployeeLookups {
+  departments: { id: string; companyId: string; code: string; name: string }[];
+  companies: { id: string; code: string; name: string; currencyCode: string }[];
+  schedules: { id: string; name: string; company: string; timezone?: string; weeklyHours: number }[];
+  managers: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    name: string;
+    jobTitle?: string;
+    employeeNumber?: string;
+    departmentId?: string;
+    departmentName?: string;
+    companyId?: string;
+  }[];
+}

@@ -84,11 +84,13 @@ export async function upsertAlert(data: UpsertAlertParams): Promise<void> {
       ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
     )
     ON DUPLICATE KEY UPDATE
+      company_id = VALUES(company_id),
       last_detected_at = CURRENT_TIMESTAMP,
       message = VALUES(message),
       severity = VALUES(severity),
       blocking = VALUES(blocking),
-      metadata = VALUES(metadata)
+      metadata = VALUES(metadata),
+      status = IF(status IN ('RESOLVED', 'DISMISSED'), 'OPEN', status)
   `, [
     data.companyId,
     data.type,

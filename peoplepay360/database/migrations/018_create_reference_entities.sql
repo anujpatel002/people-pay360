@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS companies (
   PRIMARY KEY (id),
   UNIQUE KEY uq_company_code (code),
   KEY idx_company_is_active (is_active)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ─── Employment Types ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS employment_type (
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS employment_type (
   PRIMARY KEY (id),
   UNIQUE KEY uq_employment_type_code (code),
   KEY idx_employment_type_is_active (is_active)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Seed recommended initial values
 INSERT IGNORE INTO employment_type (id, code, name) VALUES
@@ -61,4 +61,4 @@ CREATE TABLE IF NOT EXISTS departments (
     FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE RESTRICT,
   CONSTRAINT fk_department_manager
     FOREIGN KEY (manager_employee_id) REFERENCES employees(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -33,8 +33,8 @@ CREATE TABLE IF NOT EXISTS dashboard_alerts (
   created_at         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  -- Deduplication: only one OPEN/ACKNOWLEDGED alert per unique dedup_key
-  UNIQUE KEY uq_alert_dedup_open (dedup_key, status),
+  -- Deduplication: stable deterministic key per alert identity
+  UNIQUE KEY uq_alert_dedup (dedup_key),
   -- Performance indexes per spec §20
   KEY idx_alert_company_status      (company_id, status),
   KEY idx_alert_company_type_status (company_id, type, status),
@@ -51,4 +51,4 @@ CREATE TABLE IF NOT EXISTS dashboard_alerts (
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE SET NULL,
   CONSTRAINT fk_alert_resolver
     FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

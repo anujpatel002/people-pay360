@@ -81,3 +81,17 @@ export async function getCorrections(req: RequestWithUser, res: Response, next: 
     next(err);
   }
 }
+
+export async function bulkImport(req: RequestWithUser, res: Response, next: NextFunction) {
+  try {
+    const rows = req.body?.rows;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      res.status(400).json({ error: 'rows array is required and must not be empty' });
+      return;
+    }
+    const result = await service.bulkImport(req.user, rows);
+    res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+}

@@ -10,18 +10,42 @@ export default function EmployeePayrollInfo({ values, onChange, readOnly }: Prop
   const input = (key: keyof EmployeeFormValues) => ({
     value: (values[key] as string) ?? '',
     disabled: readOnly,
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange({ [key]: e.target.value || undefined }),
-    style: { padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 6, width: '100%' },
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      onChange({ [key]: e.target.value || undefined }),
+    className: 'app-input',
+    style: { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' },
   });
 
   return (
-    <section>
-      <h4 style={{ margin: '0 0 12px', color: '#111827' }}>Payroll Information</h4>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <label>Bank Account<input {...input('bankAccount')} /></label>
-        <label>IBAN<input {...input('iban')} /></label>
-        <label>SWIFT<input {...input('swift')} /></label>
+    <div className="app-form-section">
+      <div className="app-form-section-header">
+        <div>
+          <h4 className="app-form-section-title">
+            <span style={{ fontSize: '18px' }}>💳</span> Payroll & Banking Details
+          </h4>
+          <p className="app-form-section-subtitle">
+            Direct salary deposit credentials for monthly payroll processing and payslip disbursement
+          </p>
+        </div>
       </div>
-    </section>
+
+      <div className="app-form-grid">
+        <div className="app-form-group">
+          <label className="app-label">Bank Account Number</label>
+          <input placeholder="e.g. 123456789012" {...input('bankAccount')} />
+        </div>
+
+        <div className="app-form-group">
+          <label className="app-label">IBAN / IFSC Code</label>
+          <input placeholder="e.g. HDFC0001234 / GB29..." {...input('iban')} />
+        </div>
+
+        <div className="app-form-group">
+          <label className="app-label">SWIFT / BIC Code</label>
+          <input placeholder="e.g. HDFCINBBXXX" {...input('swift')} />
+        </div>
+      </div>
+    </div>
   );
 }
+

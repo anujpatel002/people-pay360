@@ -8,6 +8,7 @@ export function detectAttendanceStatus(params: {
   workedMinutes?: number | null;
   overtimeMinutes?: number;
   isManualEntry?: boolean;
+  now?: Date;
 }): AttendanceStatus {
   const {
     checkIn,
@@ -15,6 +16,7 @@ export function detectAttendanceStatus(params: {
     dayConfig,
     overtimeMinutes = 0,
     isManualEntry = false,
+    now = new Date(),
   } = params;
 
   if (isManualEntry) {
@@ -32,7 +34,7 @@ export function detectAttendanceStatus(params: {
 
       // Add 30 minutes grace threshold
       const thresholdTime = scheduledEnd.getTime() + 30 * 60 * 1000;
-      if (Date.now() > thresholdTime) {
+      if (now.getTime() > thresholdTime) {
         return 'Missing Check-Out';
       }
     }

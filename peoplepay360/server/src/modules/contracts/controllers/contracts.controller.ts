@@ -7,12 +7,23 @@ export async function listContracts(req: RequestWithUser, res: Response, next: N
   try {
     const filters = {
       employeeId: req.query.employeeId as string | undefined,
+      search:     req.query.search     as string | undefined,
       status:     req.query.status     as string | undefined,
+      department: req.query.department as string | undefined,
+      companyId:  req.query.companyId  as string | undefined,
+      sortBy:     req.query.sortBy     as string | undefined,
+      sortOrder:  req.query.sortOrder  as 'asc' | 'desc' | undefined,
       page:       req.query.page  ? Number(req.query.page)  : undefined,
       limit:      req.query.limit ? Number(req.query.limit) : undefined,
     } as Parameters<typeof service.getContracts>[0];
 
     res.json(await service.getContracts(filters));
+  } catch (err) { next(err); }
+}
+
+export async function getContractLookups(req: RequestWithUser, res: Response, next: NextFunction) {
+  try {
+    res.json(await service.getContractLookups());
   } catch (err) { next(err); }
 }
 

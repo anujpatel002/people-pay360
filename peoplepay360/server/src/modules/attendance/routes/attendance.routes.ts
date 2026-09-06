@@ -9,6 +9,7 @@ import {
   checkOut,
   correctRecord,
   getCorrections,
+  bulkImport,
 } from '../controllers/attendance.controller';
 
 const HR = ['HR Manager', 'HR Payroll User', 'HR Payroll Manager', 'Admin'] as const;
@@ -29,5 +30,8 @@ router.get('/:id', h(getAttendanceRecord));
 // Authorized correction routes
 router.put('/:id/correct', requireRoles(...HR) as unknown as RequestHandler, h(correctRecord));
 router.get('/:id/corrections', requireRoles(...HR) as unknown as RequestHandler, h(getCorrections));
+
+// Bulk import (HR only)
+router.post('/bulk', requireRoles(...HR) as unknown as RequestHandler, h(bulkImport));
 
 export default router;

@@ -17,7 +17,11 @@ export async function getEmployee(id: string): Promise<Employee> {
 
 export async function getSmartCounts(id: string): Promise<SmartCounts> {
   await getEmployee(id);
-  return repo.countRelated(id);
+  return repo.getSmartCounts(id);
+}
+
+export async function getLookups() {
+  return repo.getLookups();
 }
 
 export async function createEmployee(data: Record<string, unknown>, actorId: string): Promise<Employee> {
@@ -37,13 +41,15 @@ export async function updateEmployee(id: string, data: Record<string, unknown>, 
     await validateManager(data.managerId as string | null, id);
   }
 
-  return repo.update(id, { ...data, updatedBy: actorId });
+  const updated = await repo.update(id, { ...data, updatedBy: actorId });
+  if (!updated) throw new NotFoundError('Employee not found');
+  return updated;
 }
 
 export async function archiveEmployee(id: string, actorId: string): Promise<void> {
   await getEmployee(id);
   await checkOpenPayrun(id);
-  await repo.softArchive(id, actorId);
+  await repo.archive(id, actorId);
 }
 
 export async function restoreEmployee(id: string): Promise<Employee> {
@@ -87,14 +93,15 @@ async function detectCycle(employeeId: string, managerId: string): Promise<void>
 }
 
 async function checkOpenPayrun(employeeId: string): Promise<void> {
-  const [[row]] = await pool.execute<(RowDataPacket & { cnt: number })[]>(
+  const [rows] = await pool.execute<RowDataPacket[]>(
     `SELECT COUNT(*) AS cnt FROM payslips p
      JOIN payruns pr ON pr.id = p.payrun_id
-     WHERE p.employee_id = ? AND pr.status NOT IN ('Paid')`,
+     WHERE p.employee_id = ? AND pr.status NOT IN ('Paid', 'Cancelled')`,
     [employeeId]
   );
 
-  if (row.cnt > 0) {
+  const cnt = Number((rows[0] as any)?.cnt ?? 0);
+  if (cnt > 0) {
     throw new AppError(409, 'Employee is referenced by an open payrun');
   }
 }

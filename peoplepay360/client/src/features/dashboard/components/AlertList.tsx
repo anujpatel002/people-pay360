@@ -37,6 +37,7 @@ export const AlertList: React.FC<AlertListProps> = ({ alerts, companyId, onRefre
           bg: '#fef2f2',
           border: '#fecaca',
           text: '#991b1b',
+          badgeBg: '#fee2e2',
           dot: '#ef4444',
         };
       case 'WARNING':
@@ -44,6 +45,7 @@ export const AlertList: React.FC<AlertListProps> = ({ alerts, companyId, onRefre
           bg: '#fffbeb',
           border: '#fde68a',
           text: '#92400e',
+          badgeBg: '#fef3c7',
           dot: '#f59e0b',
         };
       default:
@@ -51,155 +53,191 @@ export const AlertList: React.FC<AlertListProps> = ({ alerts, companyId, onRefre
           bg: '#f0f9ff',
           border: '#bae6fd',
           text: '#0369a1',
+          badgeBg: '#e0f2fe',
           dot: '#0ea5e9',
         };
     }
   };
 
+  const totalActive = alerts.reduce((acc, curr) => acc + curr.count, 0);
+
+  const formatAlertTitle = (type: string) => {
+    switch (type) {
+      case 'MISSING_BANK_DETAILS':
+        return 'Missing Bank Details';
+      case 'DUPLICATE_PAYSLIP':
+        return 'Duplicate Payslip Detected';
+      case 'UNVALIDATED_PAYRUN':
+        return 'Unvalidated Payrun';
+      case 'EXPIRING_CONTRACT':
+        return 'Expiring Contract';
+      default:
+        return type.replace(/_/g, ' ');
+    }
+  };
+
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        borderRadius: '16px',
-        padding: '24px',
-        boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-        border: '1px solid #e2e8f0',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-      }}
-    >
+    <div className="dash-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
+          <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>
             Operational Alerts
           </h3>
-          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>
-            Action items and anomalies requiring attention
+          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--dash-text-muted)' }}>
+            Exceptions and required actions requiring attention
           </p>
         </div>
-        {alerts.length > 0 && (
+
+        {totalActive > 0 ? (
           <span
             style={{
               fontSize: '12px',
               fontWeight: 700,
-              padding: '3px 10px',
+              padding: '4px 10px',
               borderRadius: '20px',
               background: '#fee2e2',
               color: '#dc2626',
+              border: '1px solid #fecaca',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
             }}
           >
-            {alerts.reduce((acc, curr) => acc + curr.count, 0)} active
+            <span
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                backgroundColor: '#ef4444',
+                animation: 'dashPulse 1.8s infinite',
+              }}
+            />
+            {totalActive} active
+          </span>
+        ) : (
+          <span
+            style={{
+              fontSize: '12px',
+              fontWeight: 700,
+              padding: '4px 10px',
+              borderRadius: '20px',
+              background: '#ecfdf5',
+              color: '#059669',
+              border: '1px solid #a7f3d0',
+            }}
+          >
+            ✓ All clear
           </span>
         )}
       </div>
 
+      {/* Alerts List */}
       {alerts.length === 0 ? (
         <div
           style={{
-            padding: '32px 16px',
-            textAlign: 'center',
-            color: '#10b981',
-            background: '#ecfdf5',
-            borderRadius: '12px',
-            margin: 'auto 0',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '36px 16px',
+            color: 'var(--dash-text-subtle)',
+            fontSize: '13.5px',
           }}
         >
-          <div style={{ fontSize: '24px', marginBottom: '8px' }}>✓</div>
-          <div style={{ fontWeight: 600, fontSize: '15px' }}>All Clear!</div>
-          <div style={{ fontSize: '13px', color: '#047857', marginTop: '4px' }}>
-            No operational warnings, duplicate payslips, or expiring contracts.
-          </div>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" style={{ marginBottom: '10px' }}>
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          No pending anomalies or blocking issues detected
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
-          {alerts.map((alert) => {
-            const style = getSeverityStyle(alert.severity);
+        <div className="dash-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflowY: 'auto' }}>
+          {alerts.map((item) => {
+            const style = getSeverityStyle(item.severity);
 
             return (
               <div
-                key={alert.id}
-                onClick={() => handleAlertClick(alert)}
+                key={`${item.type}-${item.status}`}
+                onClick={() => handleAlertClick(item)}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 16px',
+                  padding: '14px 16px',
                   borderRadius: '12px',
                   background: style.bg,
                   border: `1px solid ${style.border}`,
                   cursor: 'pointer',
-                  transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                  position: 'relative',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateX(3px)';
-                  e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.05)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(15, 23, 42, 0.06)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateX(0)';
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                   <div
                     style={{
-                      width: '10px',
-                      height: '10px',
+                      width: '8px',
+                      height: '8px',
                       borderRadius: '50%',
                       background: style.dot,
+                      marginTop: '6px',
                       flexShrink: 0,
                     }}
                   />
                   <div>
-                    <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>
-                      {alert.message}
-                    </div>
-                    <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
-                      <span
-                        style={{
-                          fontSize: '10px',
-                          fontWeight: 700,
-                          padding: '1px 6px',
-                          borderRadius: '4px',
-                          background: style.border,
-                          color: style.text,
-                        }}
-                      >
-                        {alert.severity}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 750, fontSize: '13.5px', color: '#0f172a' }}>
+                        {formatAlertTitle(item.type)}
                       </span>
-                      {alert.blocking && (
+                      {item.blocking && (
                         <span
                           style={{
-                            fontSize: '10px',
-                            fontWeight: 700,
-                            padding: '1px 6px',
-                            borderRadius: '4px',
+                            fontSize: '10.5px',
+                            fontWeight: 800,
+                            padding: '2px 6px',
+                            borderRadius: '5px',
                             background: '#ef4444',
                             color: '#ffffff',
+                            letterSpacing: '0.04em',
                           }}
                         >
                           BLOCKING
                         </span>
                       )}
                     </div>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: style.text, fontWeight: 500 }}>
+                      {item.message}
+                    </p>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span
                     style={{
-                      background: '#ffffff',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      background: style.badgeBg,
                       color: style.text,
-                      padding: '2px 8px',
-                      borderRadius: '12px',
-                      fontWeight: 700,
-                      fontSize: '12px',
                       border: `1px solid ${style.border}`,
                     }}
                   >
-                    {alert.count}
+                    {item.count}
                   </span>
-                  <span style={{ color: '#94a3b8', fontSize: '14px' }}>›</span>
+
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
                 </div>
               </div>
             );
@@ -207,6 +245,7 @@ export const AlertList: React.FC<AlertListProps> = ({ alerts, companyId, onRefre
         </div>
       )}
 
+      {/* Detail Drawer Modal */}
       {selectedAlert && (
         <AlertDetail
           alert={selectedAlert}
@@ -217,7 +256,14 @@ export const AlertList: React.FC<AlertListProps> = ({ alerts, companyId, onRefre
           }}
         />
       )}
+
+      {loadingDetail && (
+        <div style={{ textAlign: 'center', padding: '8px', fontSize: '12px', color: 'var(--dash-text-muted)' }}>
+          Loading alert details...
+        </div>
+      )}
     </div>
   );
 };
+
 export default AlertList;

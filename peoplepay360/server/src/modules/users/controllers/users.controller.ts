@@ -5,10 +5,13 @@ import * as usersService from '../services/users.service';
 
 export async function listUsersHandler(req: RequestWithUser, res: Response, next: NextFunction) {
   try {
-    const { search, role, page, limit } = req.query as Record<string, string>;
+    const { search, role, status, sortBy, sortOrder, page, limit } = req.query as Record<string, string>;
     const result = await usersService.getUsers({
       search,
       role,
+      status,
+      sortBy,
+      sortOrder: sortOrder as 'ASC' | 'DESC',
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
     });

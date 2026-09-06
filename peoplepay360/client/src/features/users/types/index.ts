@@ -29,6 +29,9 @@ export interface UpdateUserPayload {
 export interface UsersFilters {
   search?: string;
   role?: string;
+  status?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
   page?: number;
   limit?: number;
 }

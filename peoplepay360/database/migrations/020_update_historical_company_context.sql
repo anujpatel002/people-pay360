@@ -37,7 +37,6 @@ ALTER TABLE salary_structures
 
 -- ─── payruns — add missing indexes ───────────────────────────────────────────
 -- payruns.company_id already exists from migration 017; add composite indexes
-CREATE INDEX IF NOT EXISTS idx_payrun_company_period
-  ON payruns (company_id, period_start, period_end);
-CREATE INDEX IF NOT EXISTS idx_payrun_company_status
-  ON payruns (company_id, status);
+ALTER TABLE payruns
+  ADD KEY idx_payrun_company_period (company_id, period_start, period_end),
+  ADD KEY idx_payrun_company_status (company_id, status);

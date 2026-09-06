@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAttendanceRecord } from '../hooks/useAttendanceRecord';
 import { useAttendanceCorrections } from '../hooks/useAttendanceCorrections';
@@ -19,7 +19,7 @@ function formatMinutes(minutes: number | null | undefined): string {
 function formatDateTime(isoStr: string | null): string {
   if (!isoStr) return '—';
   const d = new Date(isoStr);
-  return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+  return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 }
 
 export default function AttendanceFormPage() {
@@ -37,17 +37,39 @@ export default function AttendanceFormPage() {
 
   if (loading) {
     return (
-      <div style={styles.page}>
-        <p style={styles.muted}>Loading attendance details...</p>
+      <div className="app-page">
+        <div className="app-page-container" style={{ textAlign: 'center', padding: '60px 0', color: '#64748b' }}>
+          Loading attendance details...
+        </div>
       </div>
     );
   }
 
   if (error || !record) {
     return (
-      <div style={styles.page}>
-        <button style={styles.backBtn} onClick={() => navigate('/attendance')}>← Back to List</button>
-        <p style={styles.error}>{error ?? 'Attendance record not found'}</p>
+      <div className="app-page">
+        <div className="app-page-container" style={{ maxWidth: '800px' }}>
+          <button
+            type="button"
+            onClick={() => navigate('/attendance')}
+            className="app-btn app-btn-secondary"
+            style={{ marginBottom: '16px' }}
+          >
+            ← Back to Attendance
+          </button>
+          <div
+            style={{
+              padding: '16px 20px',
+              borderRadius: '12px',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#991b1b',
+              fontSize: '14px',
+            }}
+          >
+            {error ?? 'Attendance record not found'}
+          </div>
+        </div>
       </div>
     );
   }
@@ -57,314 +79,255 @@ export default function AttendanceFormPage() {
     try {
       await correctRecord(record.id, payload);
       await Promise.all([refetchRecord(), refetchCorrections()]);
+      setIsCorrectionOpen(false);
     } catch (err: unknown) {
-      setActionError((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Correction failed');
+      setActionError(
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+          'Correction failed'
+      );
       throw err;
     }
   };
 
   return (
-    <div style={styles.page}>
-      <div style={styles.topNav}>
-        <button style={styles.backBtn} onClick={() => navigate('/attendance')}>← Back to Attendance</button>
-        {isHrOrAdmin && (
-          <button
-            style={styles.correctBtn}
-            onClick={() => setIsCorrectionOpen(true)}
-          >
-            ✎ Correct Attendance
-          </button>
-        )}
-      </div>
-
-      <div style={styles.header}>
-        <div>
-          <h2 style={styles.title}>Attendance: {record.date}</h2>
-          <p style={styles.subtitle}>
-            {record.employeeName ?? record.employeeId} {record.employeeNumber && `(${record.employeeNumber})`}
-          </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <AttendanceStatusBadge status={record.status} />
-          <ExceptionFlag record={record} />
-        </div>
-      </div>
-
-      {actionError && <p style={styles.error}>{actionError}</p>}
-
-      {/* Primary Details Card */}
-      <div style={styles.card}>
-        <h3 style={styles.sectionTitle}>Session & Working Time</h3>
-        <div style={styles.grid}>
-          <div style={styles.field}>
-            <label style={styles.label}>Attendance Date</label>
-            <div style={styles.value}>{record.date}</div>
-          </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Working Schedule</label>
-            <div style={styles.value}>{record.scheduleName ?? 'Standard 40h'}</div>
-          </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Check-In Timestamp</label>
-            <div style={styles.value}>{formatDateTime(record.checkIn)}</div>
-          </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Check-Out Timestamp</label>
-            <div style={styles.value}>{formatDateTime(record.checkOut)}</div>
-          </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Worked Duration</label>
-            <div style={styles.highlightValue}>{formatMinutes(record.workedMinutes)}</div>
-          </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Overtime</label>
-            <div style={record.overtimeMinutes > 0 ? styles.otValue : styles.value}>
-              {formatMinutes(record.overtimeMinutes)}
+    <div className="app-page">
+      <div className="app-page-container" style={{ maxWidth: '860px' }}>
+        {/* Header */}
+        <div className="app-page-header">
+          <div className="app-page-title-group">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/attendance')}
+                className="app-btn app-btn-secondary"
+                style={{ padding: '4px 8px', fontSize: '12px' }}
+              >
+                ← Back to Attendance
+              </button>
+              <h1 className="app-page-title">
+                Attendance Record: {record.date}
+              </h1>
             </div>
-          </div>
-        </div>
-
-        {record.isManualEntry && (
-          <div style={styles.manualNotice}>
-            <h4 style={styles.manualTitle}>Manual Correction Applied</h4>
-            <p style={styles.manualText}><strong>Reason:</strong> {record.correctionReason}</p>
-            <p style={styles.manualText}>
-              <strong>Corrected By:</strong> {record.correctorName ?? record.correctedBy ?? 'HR Officer'} on {formatDateTime(record.correctedAt)}
+            <p className="app-page-subtitle">
+              Employee: <strong>{record.employeeName ?? record.employeeId}</strong>{' '}
+              {record.employeeNumber && `(${record.employeeNumber})`}
             </p>
           </div>
-        )}
-      </div>
 
-      {/* Immutable Audit History Timeline */}
-      <div style={styles.card}>
-        <h3 style={styles.sectionTitle}>Correction Audit History</h3>
-        {corrections.length === 0 ? (
-          <p style={styles.muted}>No manual corrections have been made to this record.</p>
-        ) : (
-          <div style={styles.timeline}>
-            {corrections.map((c, i) => (
-              <div key={c.id} style={styles.timelineItem}>
-                <div style={styles.timelineHeader}>
-                  <span style={styles.timelineIdx}>Revision #{corrections.length - i}</span>
-                  <span style={styles.timelineDate}>{formatDateTime(c.correctedAt)}</span>
-                  <span style={styles.timelineUser}>by {c.correctorName ?? c.correctedBy}</span>
-                </div>
-                <div style={styles.reasonBox}>
-                  <strong>Reason:</strong> {c.correctionReason}
-                </div>
-                <div style={styles.diffGrid}>
-                  <div style={styles.diffCol}>
-                    <span style={styles.diffLabel}>Before:</span>
-                    <div>In: {formatDateTime(c.originalCheckIn)}</div>
-                    <div>Out: {formatDateTime(c.originalCheckOut)}</div>
-                    <div>Worked: {formatMinutes(c.originalWorkedMinutes)}</div>
-                    <div>Status: {c.originalStatus}</div>
-                  </div>
-                  <div style={styles.diffCol}>
-                    <span style={styles.diffLabel}>After:</span>
-                    <div>In: {formatDateTime(c.correctedCheckIn)}</div>
-                    <div>Out: {formatDateTime(c.correctedCheckOut)}</div>
-                    <div>Worked: {formatMinutes(c.correctedWorkedMinutes)}</div>
-                    <div>Status: {c.correctedStatus}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <AttendanceStatusBadge status={record.status} />
+            <ExceptionFlag record={record} />
+            {isHrOrAdmin && (
+              <button
+                type="button"
+                className="app-btn app-btn-primary"
+                onClick={() => setIsCorrectionOpen(true)}
+              >
+                ✎ Correct Record
+              </button>
+            )}
+          </div>
+        </div>
+
+        {actionError && (
+          <div
+            style={{
+              padding: '12px 16px',
+              borderRadius: '8px',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#991b1b',
+              fontSize: '13px',
+              marginBottom: '20px',
+            }}
+          >
+            {actionError}
           </div>
         )}
-      </div>
 
-      {/* Modal Dialog */}
-      {isHrOrAdmin && (
-        <AttendanceCorrectionDialog
-          record={record}
-          isOpen={isCorrectionOpen}
-          onClose={() => setIsCorrectionOpen(false)}
-          onSubmit={handleApplyCorrection}
-        />
-      )}
+        {/* Primary Details Card */}
+        <div className="app-card" style={{ marginBottom: '24px' }}>
+          <h3 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
+            Session & Working Time
+          </h3>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+            <div>
+              <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                Attendance Date
+              </span>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginTop: '2px' }}>
+                {record.date}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                Working Schedule
+              </span>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginTop: '2px' }}>
+                {record.scheduleName ?? 'Standard 40h Shift'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                Check-In Timestamp
+              </span>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginTop: '2px' }}>
+                {formatDateTime(record.checkIn)}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                Check-Out Timestamp
+              </span>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginTop: '2px' }}>
+                {formatDateTime(record.checkOut)}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                Worked Duration
+              </span>
+              <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
+                {formatMinutes(record.workedMinutes)}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '11.5px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>
+                Overtime Duration
+              </span>
+              <div
+                style={{
+                  fontSize: '15px',
+                  fontWeight: 800,
+                  color: record.overtimeMinutes > 0 ? '#2563eb' : '#64748b',
+                  marginTop: '2px',
+                }}
+              >
+                {formatMinutes(record.overtimeMinutes)}
+              </div>
+            </div>
+          </div>
+
+          {record.isManualEntry && (
+            <div
+              style={{
+                marginTop: '20px',
+                padding: '14px 18px',
+                background: '#f5f3ff',
+                border: '1px solid #ddd6fe',
+                borderRadius: '8px',
+              }}
+            >
+              <h4 style={{ margin: '0 0 4px', fontSize: '13.5px', fontWeight: 700, color: '#6d28d9' }}>
+                ✏️ Manual Correction Applied
+              </h4>
+              <p style={{ margin: '4px 0', fontSize: '13px', color: '#4c1d95' }}>
+                <strong>Reason:</strong> {record.correctionReason}
+              </p>
+              <p style={{ margin: 0, fontSize: '12px', color: '#7c3aed' }}>
+                Corrected by <strong>{record.correctorName ?? record.correctedBy ?? 'HR Officer'}</strong> on{' '}
+                {formatDateTime(record.correctedAt)}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Immutable Audit History Timeline */}
+        <div className="app-card">
+          <h3 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
+            Correction Audit History ({corrections.length})
+          </h3>
+
+          {corrections.length === 0 ? (
+            <p style={{ color: '#64748b', fontSize: '13.5px', margin: 0 }}>
+              No manual corrections have been made to this record.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {corrections.map((c, i) => (
+                <div
+                  key={c.id}
+                  style={{
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '14px 16px',
+                    background: '#f8fafc',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '8px',
+                      fontSize: '12.5px',
+                    }}
+                  >
+                    <span style={{ fontWeight: 700, color: 'var(--primary-600)' }}>
+                      Revision #{corrections.length - i}
+                    </span>
+                    <span style={{ color: '#64748b' }}>
+                      {formatDateTime(c.correctedAt)} · by {c.correctorName ?? c.correctedBy}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      padding: '8px 12px',
+                      fontSize: '13px',
+                      color: '#1e293b',
+                      marginBottom: '10px',
+                    }}
+                  >
+                    <strong>Reason:</strong> {c.correctionReason}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
+                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '8px 10px', borderRadius: '6px' }}>
+                      <span style={{ fontWeight: 700, color: '#dc2626', display: 'block', marginBottom: '4px' }}>
+                        Before:
+                      </span>
+                      <div>In: {formatDateTime(c.originalCheckIn)}</div>
+                      <div>Out: {formatDateTime(c.originalCheckOut)}</div>
+                      <div>Worked: {formatMinutes(c.originalWorkedMinutes)}</div>
+                      <div>Status: {c.originalStatus}</div>
+                    </div>
+
+                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '8px 10px', borderRadius: '6px' }}>
+                      <span style={{ fontWeight: 700, color: '#16a34a', display: 'block', marginBottom: '4px' }}>
+                        After:
+                      </span>
+                      <div>In: {formatDateTime(c.correctedCheckIn)}</div>
+                      <div>Out: {formatDateTime(c.correctedCheckOut)}</div>
+                      <div>Worked: {formatMinutes(c.correctedWorkedMinutes)}</div>
+                      <div>Status: {c.correctedStatus}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Modal Dialog */}
+        {isHrOrAdmin && (
+          <AttendanceCorrectionDialog
+            record={record}
+            isOpen={isCorrectionOpen}
+            onClose={() => setIsCorrectionOpen(false)}
+            onSubmit={handleApplyCorrection}
+          />
+        )}
+      </div>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    padding: '1.5rem 2rem',
-    maxWidth: 900,
-    margin: '0 auto',
-  },
-  topNav: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1rem',
-  },
-  backBtn: {
-    padding: '0.4rem 0.85rem',
-    background: '#ffffff',
-    border: '1px solid #cbd5e1',
-    borderRadius: 6,
-    cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-  },
-  correctBtn: {
-    padding: '0.45rem 1.1rem',
-    background: '#4f46e5',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: 6,
-    fontWeight: 600,
-    fontSize: '0.875rem',
-    cursor: 'pointer',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '1.5rem',
-  },
-  title: {
-    margin: 0,
-    fontSize: '1.4rem',
-    fontWeight: 700,
-    color: '#0f172a',
-  },
-  subtitle: {
-    margin: '0.25rem 0 0',
-    fontSize: '0.95rem',
-    color: '#64748b',
-  },
-  card: {
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: 10,
-    padding: '1.5rem',
-    marginBottom: '1.5rem',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-  },
-  sectionTitle: {
-    margin: '0 0 1.25rem',
-    fontSize: '1.1rem',
-    fontWeight: 700,
-    color: '#1e293b',
-    borderBottom: '1px solid #f1f5f9',
-    paddingBottom: '0.5rem',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '1.25rem',
-  },
-  field: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  label: {
-    fontSize: '0.75rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    color: '#64748b',
-    fontWeight: 600,
-  },
-  value: {
-    fontSize: '0.95rem',
-    fontWeight: 500,
-    color: '#1e293b',
-  },
-  highlightValue: {
-    fontSize: '1rem',
-    fontWeight: 700,
-    color: '#0f172a',
-  },
-  otValue: {
-    fontSize: '0.95rem',
-    fontWeight: 700,
-    color: '#2563eb',
-  },
-  manualNotice: {
-    marginTop: '1.5rem',
-    padding: '1rem',
-    background: '#f8fafc',
-    borderLeft: '4px solid #8b5cf6',
-    borderRadius: 6,
-  },
-  manualTitle: {
-    margin: '0 0 0.5rem',
-    fontSize: '0.9rem',
-    fontWeight: 700,
-    color: '#6d28d9',
-  },
-  manualText: {
-    margin: '0.2rem 0',
-    fontSize: '0.85rem',
-    color: '#334155',
-  },
-  timeline: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  timelineItem: {
-    border: '1px solid #e2e8f0',
-    borderRadius: 8,
-    padding: '1rem',
-    background: '#f8fafc',
-  },
-  timelineHeader: {
-    display: 'flex',
-    gap: '0.75rem',
-    alignItems: 'center',
-    marginBottom: '0.5rem',
-    fontSize: '0.85rem',
-  },
-  timelineIdx: {
-    fontWeight: 700,
-    color: '#4f46e5',
-  },
-  timelineDate: {
-    color: '#64748b',
-  },
-  timelineUser: {
-    fontWeight: 500,
-    color: '#334155',
-  },
-  reasonBox: {
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: 6,
-    padding: '0.5rem 0.75rem',
-    fontSize: '0.85rem',
-    marginBottom: '0.75rem',
-    color: '#1e293b',
-  },
-  diffGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '1rem',
-    fontSize: '0.8rem',
-  },
-  diffCol: {
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: 6,
-    padding: '0.5rem 0.75rem',
-    color: '#475569',
-  },
-  diffLabel: {
-    fontWeight: 700,
-    color: '#0f172a',
-    display: 'block',
-    marginBottom: '0.25rem',
-  },
-  muted: {
-    color: '#94a3b8',
-    fontSize: '0.875rem',
-  },
-  error: {
-    color: '#dc2626',
-    fontSize: '0.875rem',
-    margin: '0 0 1rem',
-  },
-};

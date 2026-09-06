@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Employee, EmployeeFormValues } from '../types/employee.types';
+import { useState, useEffect } from 'react';
+import { EmployeeFormValues, EmployeeLookups } from '../types/employee.types';
+import * as service from '../services/employees.service';
 import EmployeePersonalInfo from './EmployeePersonalInfo';
 import EmployeeWorkInfo from './EmployeeWorkInfo';
 import EmployeeScheduleInfo from './EmployeeScheduleInfo';
@@ -10,14 +11,26 @@ interface Props {
   onSubmit: (values: EmployeeFormValues) => Promise<void>;
   submitLabel?: string;
   canViewPayroll?: boolean;
+  currentEmployeeId?: string;
 }
 
 const EMPTY: Partial<EmployeeFormValues> = { employmentType: 'full_time' };
 
-export default function EmployeeForm({ initial = EMPTY, onSubmit, submitLabel = 'Save', canViewPayroll = false }: Props) {
+export default function EmployeeForm({
+  initial = EMPTY,
+  onSubmit,
+  submitLabel = 'Save Employee',
+  canViewPayroll = false,
+  currentEmployeeId,
+}: Props) {
   const [values, setValues] = useState<Partial<EmployeeFormValues>>(initial);
+  const [lookups, setLookups] = useState<EmployeeLookups | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    service.getEmployeeLookups().then(setLookups).catch(console.error);
+  }, []);
 
   const patch = (p: Partial<EmployeeFormValues>) => setValues((v) => ({ ...v, ...p }));
 
@@ -39,24 +52,81 @@ export default function EmployeeForm({ initial = EMPTY, onSubmit, submitLabel = 
     }
   }
 
-  const sectionStyle = { borderTop: '1px solid #e5e7eb', paddingTop: 20, marginTop: 20 };
-
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
       <EmployeePersonalInfo values={values} onChange={patch} />
-      <div style={sectionStyle}><EmployeeWorkInfo values={values} onChange={patch} /></div>
-      <div style={sectionStyle}><EmployeeScheduleInfo values={values} onChange={patch} /></div>
-      {canViewPayroll && <div style={sectionStyle}><EmployeePayrollInfo values={values} onChange={patch} /></div>}
 
-      {error && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 12 }}>{error}</p>}
+      <EmployeeWorkInfo
+        values={values}
+        onChange={patch}
+        lookups={lookups}
+        currentEmployeeId={currentEmployeeId}
+      />
 
-      <div style={{ marginTop: 20 }}>
+      <EmployeeScheduleInfo
+        values={values}
+        onChange={patch}
+        lookups={lookups}
+      />
+
+      {canViewPayroll && (
+        <EmployeePayrollInfo values={values} onChange={patch} />
+      )}
+
+      {error && (
+        <div
+          style={{
+            padding: '14px 18px',
+            borderRadius: '12px',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#991b1b',
+            fontSize: '13.5px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
+          <span style={{ fontSize: '18px' }}>⚠️</span>
+          <span>{error}</span>
+        </div>
+      )}
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '20px 24px',
+          background: '#ffffff',
+          borderRadius: '16px',
+          border: '1px solid #e2e8f0',
+          boxShadow: 'var(--app-shadow-card)',
+        }}
+      >
         <button
           type="submit"
           disabled={saving}
-          style={{ padding: '9px 22px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 600 }}
+          className="app-btn app-btn-primary"
+          style={{ minWidth: '160px', padding: '11px 24px', fontSize: '14px' }}
         >
-          {saving ? 'Saving…' : submitLabel}
+          {saving ? (
+            <>
+              <span className="app-btn-spinner" />
+              Saving Profile...
+            </>
+          ) : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              <span>{submitLabel}</span>
+            </>
+          )}
         </button>
       </div>
     </form>

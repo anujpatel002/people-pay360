@@ -17,33 +17,62 @@ export interface UserRow extends RowDataPacket {
 export interface UserFilters {
   search?: string;
   role?: string;
+  status?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
   page: number;
   limit: number;
 }
 
 export async function findAll(filters: UserFilters): Promise<{ rows: UserRow[]; total: number }> {
-  const { search, role, page, limit } = filters;
+  const { search, role, status, sortBy, sortOrder = 'DESC', page, limit } = filters;
   const offset = (page - 1) * limit;
   const conditions: string[] = [];
   const params: any[]        = [];
 
-  if (search) { conditions.push('(u.name LIKE ? OR u.work_email LIKE ?)'); params.push(`%${search}%`, `%${search}%`); }
-  if (role)   { conditions.push('u.role = ?'); params.push(role); }
+  if (search) {
+    conditions.push('(u.name LIKE ? OR u.work_email LIKE ? OR CONCAT(e.first_name, \' \', e.last_name) LIKE ?)');
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+  }
+  if (role) {
+    conditions.push('u.role = ?');
+    params.push(role);
+  }
+  if (status === 'active') {
+    conditions.push('u.is_active = 1');
+  } else if (status === 'inactive') {
+    conditions.push('u.is_active = 0');
+  }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const [countRows] = await pool.execute<RowDataPacket[]>(
-    `SELECT COUNT(*) AS total FROM users u ${where}`, params
+    `SELECT COUNT(*) AS total
+     FROM users u
+     LEFT JOIN employees e ON e.id = u.employee_id
+     ${where}`,
+    params
   );
   const total = (countRows[0] as RowDataPacket).total as number;
+
+  const validSortCols: Record<string, string> = {
+    name: 'u.name',
+    workEmail: 'u.work_email',
+    role: 'u.role',
+    employeeName: 'employee_name',
+    isActive: 'u.is_active',
+    createdAt: 'u.created_at',
+  };
+  const orderCol = (sortBy && validSortCols[sortBy]) ? validSortCols[sortBy] : 'u.created_at';
+  const orderDir = sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
   const [rows] = await pool.execute<UserRow[]>(
     `SELECT u.id, u.employee_id, CONCAT(e.first_name, ' ', e.last_name) AS employee_name,
             u.name, u.work_email, u.role, u.is_active, u.created_at, u.updated_at
      FROM users u
-     JOIN employees e ON e.id = u.employee_id
+     LEFT JOIN employees e ON e.id = u.employee_id
      ${where}
-     ORDER BY u.created_at DESC
+     ORDER BY ${orderCol} ${orderDir}
      LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
@@ -56,7 +85,7 @@ export async function findById(id: string): Promise<UserRow | null> {
     `SELECT u.id, u.employee_id, CONCAT(e.first_name, ' ', e.last_name) AS employee_name,
             u.name, u.work_email, u.role, u.is_active, u.created_at, u.updated_at
      FROM users u
-     JOIN employees e ON e.id = u.employee_id
+     LEFT JOIN employees e ON e.id = u.employee_id
      WHERE u.id = ?`,
     [id]
   );
@@ -109,9 +138,15 @@ export async function countActiveAdmins(): Promise<number> {
   return (rows[0] as RowDataPacket).total as number;
 }
 
-export async function employeeExists(employeeId: string): Promise<boolean> {
+export async function resolveEmployee(employeeId: string): Promise<{ id: string; name: string } | null> {
   const [rows] = await pool.execute<RowDataPacket[]>(
-    'SELECT id FROM employees WHERE id = ? AND status = ?', [employeeId, 'active']
+    `SELECT id, CONCAT(first_name, ' ', last_name) AS name FROM employees WHERE (id = ? OR employee_number = ?) AND status = ?`, [employeeId, employeeId, 'active']
   );
-  return rows.length > 0;
+  if (!rows.length) return null;
+  return { id: (rows[0] as any).id, name: (rows[0] as any).name };
+}
+
+export async function employeeExists(employeeId: string): Promise<boolean> {
+  const emp = await resolveEmployee(employeeId);
+  return Boolean(emp);
 }

@@ -112,3 +112,10 @@ export async function getSmartCounts(req: RequestWithUser, res: Response, next: 
     res.json(counts);
   } catch (err) { next(err); }
 }
+
+export async function getLookups(req: RequestWithUser, res: Response, next: NextFunction) {
+  try {
+    const data = await service.getLookups();
+    res.json(data);
+  } catch (err) { next(err); }
+}

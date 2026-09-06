@@ -85,3 +85,39 @@ export async function patchAlertStatus(req: RequestWithUser, res: Response, next
     next(err);
   }
 }
+
+export async function getPeopleEvents(req: RequestWithUser, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const pool = (await import('../../../database/connection/pool')).default;
+    const { RowDataPacket } = await import('mysql2');
+
+    // Work anniversaries: hire_date month-day matches within next 30 days
+    const [rows] = await (pool as any).execute<any[]>(
+      `SELECT
+         id, first_name, last_name, job_title, department_id,
+         hire_date,
+         YEAR(CURDATE()) - YEAR(hire_date) AS years_of_service,
+         DATE(CONCAT(YEAR(CURDATE()), '-', LPAD(MONTH(hire_date),2,'0'), '-', LPAD(DAY(hire_date),2,'0'))) AS anniversary_this_year
+       FROM employees
+       WHERE status = 'active'
+         AND hire_date IS NOT NULL
+         AND DATE(CONCAT(YEAR(CURDATE()), '-', LPAD(MONTH(hire_date),2,'0'), '-', LPAD(DAY(hire_date),2,'0')))
+             BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+       ORDER BY anniversary_this_year ASC
+       LIMIT 20`
+    );
+
+    res.status(200).json({
+      anniversaries: rows.map((r: any) => ({
+        id: r.id,
+        name: `${r.first_name} ${r.last_name}`,
+        jobTitle: r.job_title,
+        hireDate: r.hire_date,
+        yearsOfService: r.years_of_service,
+        anniversaryDate: r.anniversary_this_year,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+}

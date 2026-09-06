@@ -40,8 +40,9 @@ export async function updateType(req: RequestWithUser, res: Response, next: Next
 export async function listAllocations(req: RequestWithUser, res: Response, next: NextFunction) {
   try {
     const { employeeId, typeId, year, page, limit } = req.query as Record<string, string>;
+    const targetEmployeeId = isHR(req.user.role) ? employeeId : (req.user.employeeId || employeeId);
     res.json(await service.listAllocations({
-      employeeId, typeId,
+      employeeId: targetEmployeeId, typeId,
       year:  year  ? Number(year)  : undefined,
       page:  page  ? Number(page)  : undefined,
       limit: limit ? Number(limit) : undefined,
@@ -90,7 +91,12 @@ export async function createRequest(req: RequestWithUser, res: Response, next: N
   try {
     const parsed = createRequestSchema.safeParse(req.body);
     if (!parsed.success) { res.status(422).json({ error: parsed.error.errors[0].message }); return; }
-    res.status(201).json(await service.createRequest(parsed.data, req.user.employeeId));
+    const targetEmployeeId = (isHR(req.user.role) && parsed.data.employeeId) ? parsed.data.employeeId : req.user.employeeId;
+    if (!targetEmployeeId) {
+      res.status(422).json({ error: 'Please select or specify an employee for the leave request' });
+      return;
+    }
+    res.status(201).json(await service.createRequest(parsed.data, targetEmployeeId));
   } catch (err) { next(err); }
 }
 

@@ -22,7 +22,12 @@ export interface Contract {
 
 export interface ContractFilters {
   employeeId?: string;
+  search?: string;
   status?: ContractStatus;
+  department?: string;
+  companyId?: string;
+  sortBy?: 'wage' | 'startDate' | 'endDate' | 'status' | 'contractRef' | 'employeeName';
+  sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
 }

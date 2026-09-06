@@ -30,6 +30,9 @@ router.get('/', h(dashboardController.getDashboard));
 // Dimension lookups for filter dropdowns (companies, departments, employment types)
 router.get('/dimensions', h(dashboardController.getDimensions));
 
+// People Events: work anniversaries
+router.get('/people-events', h(dashboardController.getPeopleEvents));
+
 // Alert lifecycle endpoints
 router.get('/alerts', h(dashboardController.getAlerts));
 router.patch('/alerts/:id', h(dashboardController.patchAlertStatus));

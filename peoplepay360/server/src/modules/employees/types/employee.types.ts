@@ -14,12 +14,17 @@ export interface Employee {
   avatarUrl?: string;
   jobTitle?: string;
   jobPositionId?: string;
+  jobPositionName?: string;
   departmentId?: string;
+  departmentName?: string;
   managerId?: string;
+  managerName?: string;
   employmentType: EmploymentType;
   companyId?: string;
+  companyName?: string;
   location?: string;
   scheduleId?: string;
+  scheduleName?: string;
   hireDate: string;
   currentContractId?: string;
   bankAccount?: string;

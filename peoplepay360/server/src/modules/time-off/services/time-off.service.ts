@@ -1,3 +1,4 @@
+import pool from '../../../database/connection/pool';
 import * as repo from '../repositories/time-off.repository';
 import { deductBalance, restoreBalance } from './allocation-balance.service';
 import { NotFoundError, ValidationError, ForbiddenError } from '../../../shared/errors/AppError';
@@ -52,9 +53,15 @@ export async function getAllocation(id: string): Promise<Allocation> {
 }
 
 export async function createAllocation(input: CreateAllocationInput, approverId: string): Promise<Allocation> {
-  const existing = await repo.findAllocationForBalance(input.employeeId, input.typeId, input.year);
+  const [empRows] = await pool.execute<any[]>(
+    `SELECT id FROM employees WHERE (id = ? OR employee_number = ?) LIMIT 1`,
+    [input.employeeId, input.employeeId]
+  );
+  const employeeId = empRows[0]?.id || input.employeeId;
+
+  const existing = await repo.findAllocationForBalance(employeeId, input.typeId, input.year);
   if (existing) throw new ValidationError('Allocation already exists for this employee, type, and year');
-  return repo.createAllocation({ ...input, approverId });
+  return repo.createAllocation({ ...input, employeeId, approverId });
 }
 
 export async function updateAllocation(id: string, input: UpdateAllocationInput): Promise<Allocation> {
@@ -112,7 +119,7 @@ export async function createRequest(
 export async function approveRequest(id: string): Promise<TimeOffRequest> {
   const req = await repo.findRequestById(id);
   if (!req) throw new NotFoundError('Request not found');
-  if (req.status !== 'Confirmed') throw new ValidationError('Only Confirmed requests can be approved');
+  if (!['Confirmed', 'Draft'].includes(req.status)) throw new ValidationError('Only Confirmed or Draft requests can be approved');
 
   if (req.allocationId) await deductBalance(req.allocationId, req.days);
 

@@ -16,8 +16,13 @@ const BASE_SELECT = `
 
 function toMysqlDatetime(d: Date | string | null): string | null {
   if (!d) return null;
-  const date = typeof d === 'string' ? new Date(d) : d;
-  return date.toISOString().slice(0, 19).replace('T', ' ');
+  try {
+    const date = typeof d === 'string' ? new Date(d) : d;
+    if (isNaN(date.getTime())) return null;
+    return date.toISOString().slice(0, 19).replace('T', ' ');
+  } catch {
+    return null;
+  }
 }
 
 export async function create(data: {

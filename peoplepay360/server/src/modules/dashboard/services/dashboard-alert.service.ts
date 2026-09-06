@@ -6,6 +6,7 @@
 import * as alertRepo from '../repositories/dashboard-alert.repository';
 import * as payrollRepo from '../repositories/dashboard-payroll.repository';
 import * as contractRepo from '../repositories/dashboard-contract.repository';
+import * as companyRepo from '../repositories/company.repository';
 import {
   DashboardAlert,
   DashboardAlertSummary,
@@ -13,17 +14,27 @@ import {
 } from '../types/dashboard.types';
 
 export async function reconcileAlerts(companyId?: string): Promise<DashboardAlertSummary[]> {
+  const activeCompanies = await companyRepo.findAll(true);
+  const fallbackCompanyId = activeCompanies[0]?.id || '6ead8c86-a96e-11f1-b2f6-3a217fae9be6';
+  
+  let targetCompanyId = fallbackCompanyId;
+  if (companyId) {
+    const existing = await companyRepo.findById(companyId);
+    if (existing) {
+      targetCompanyId = existing.id;
+    }
+  }
 
   // 1. Reconcile Missing Bank Details
   const missingBankEmployees = await payrollRepo.countMissingBankDetails(companyId);
   const activeBankDedupKeys: string[] = [];
 
   for (const emp of missingBankEmployees) {
-    const dedupKey = `MISSING_BANK_DETAILS:${companyId || 'ALL'}:${emp.employeeId}`;
+    const dedupKey = `MISSING_BANK_DETAILS:${emp.employeeId}`;
     activeBankDedupKeys.push(dedupKey);
 
     await alertRepo.upsertAlert({
-      companyId: companyId || null,
+      companyId: emp.companyId || targetCompanyId,
       type: 'MISSING_BANK_DETAILS',
       severity: 'WARNING',
       title: 'Missing Bank Details',
@@ -42,11 +53,11 @@ export async function reconcileAlerts(companyId?: string): Promise<DashboardAler
   const activeDupDedupKeys: string[] = [];
 
   for (const dup of duplicatePayslips) {
-    const dedupKey = `DUPLICATE_PAYSLIP:${companyId || 'ALL'}:${dup.payrunId}:${dup.employeeId}`;
+    const dedupKey = `DUPLICATE_PAYSLIP:${dup.payrunId}:${dup.employeeId}`;
     activeDupDedupKeys.push(dedupKey);
 
     await alertRepo.upsertAlert({
-      companyId: companyId || null,
+      companyId: dup.companyId || targetCompanyId,
       type: 'DUPLICATE_PAYSLIP',
       severity: 'CRITICAL',
       title: 'Duplicate Payslip Detected',
@@ -65,11 +76,11 @@ export async function reconcileAlerts(companyId?: string): Promise<DashboardAler
   const activePayrunDedupKeys: string[] = [];
 
   for (const pr of unvalidatedPayruns) {
-    const dedupKey = `UNVALIDATED_PAYRUN:${companyId || 'ALL'}:${pr.payrunId}`;
+    const dedupKey = `UNVALIDATED_PAYRUN:${pr.payrunId}`;
     activePayrunDedupKeys.push(dedupKey);
 
     await alertRepo.upsertAlert({
-      companyId: companyId || null,
+      companyId: pr.companyId || targetCompanyId,
       type: 'UNVALIDATED_PAYRUN',
       severity: 'WARNING',
       title: 'Unvalidated Payrun',
@@ -87,11 +98,11 @@ export async function reconcileAlerts(companyId?: string): Promise<DashboardAler
   const activeContractDedupKeys: string[] = [];
 
   for (const ctr of expiringContracts) {
-    const dedupKey = `EXPIRING_CONTRACT:${companyId || 'ALL'}:${ctr.contractId}`;
+    const dedupKey = `EXPIRING_CONTRACT:${ctr.contractId}`;
     activeContractDedupKeys.push(dedupKey);
 
     await alertRepo.upsertAlert({
-      companyId: companyId || ctr.companyId || null,
+      companyId: ctr.companyId || targetCompanyId,
       type: 'EXPIRING_CONTRACT',
       severity: 'WARNING',
       title: 'Expiring Contract',

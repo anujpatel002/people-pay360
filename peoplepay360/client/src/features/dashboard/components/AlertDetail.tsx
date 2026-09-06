@@ -28,11 +28,11 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({ alert, onClose, onStat
   const getSeverityBadge = () => {
     switch (alert.severity) {
       case 'CRITICAL':
-        return { bg: '#fee2e2', color: '#991b1b', label: 'CRITICAL' };
+        return { bg: '#fee2e2', color: '#991b1b', border: '#fecaca', label: 'CRITICAL' };
       case 'WARNING':
-        return { bg: '#fef3c7', color: '#92400e', label: 'WARNING' };
+        return { bg: '#fef3c7', color: '#92400e', border: '#fde68a', label: 'WARNING' };
       default:
-        return { bg: '#e0f2fe', color: '#0369a1', label: 'INFO' };
+        return { bg: '#e0f2fe', color: '#0369a1', border: '#bae6fd', label: 'INFO' };
     }
   };
 
@@ -44,12 +44,14 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({ alert, onClose, onStat
         position: 'fixed',
         inset: 0,
         backgroundColor: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(4px)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1000,
+        zIndex: 1100,
         padding: '20px',
+        animation: 'dashFadeIn 0.2s ease',
       }}
       onClick={onClose}
     >
@@ -58,24 +60,27 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({ alert, onClose, onStat
           background: '#ffffff',
           borderRadius: '20px',
           width: '100%',
-          maxWidth: '520px',
+          maxWidth: '540px',
           padding: '28px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.3)',
           border: '1px solid #e2e8f0',
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
               <span
                 style={{
                   fontSize: '11px',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   padding: '3px 8px',
                   borderRadius: '6px',
                   background: sev.bg,
                   color: sev.color,
+                  border: `1px solid ${sev.border}`,
+                  letterSpacing: '0.04em',
                 }}
               >
                 {sev.label}
@@ -84,11 +89,12 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({ alert, onClose, onStat
                 <span
                   style={{
                     fontSize: '11px',
-                    fontWeight: 700,
+                    fontWeight: 800,
                     padding: '3px 8px',
                     borderRadius: '6px',
                     background: '#ef4444',
                     color: '#ffffff',
+                    letterSpacing: '0.04em',
                   }}
                 >
                   BLOCKING
@@ -97,138 +103,165 @@ export const AlertDetail: React.FC<AlertDetailProps> = ({ alert, onClose, onStat
               <span
                 style={{
                   fontSize: '11px',
-                  fontWeight: 600,
+                  fontWeight: 700,
+                  color: '#64748b',
+                  background: '#f1f5f9',
                   padding: '3px 8px',
                   borderRadius: '6px',
-                  background: '#f1f5f9',
-                  color: '#475569',
                 }}
               >
-                Status: {alert.status}
+                {alert.type}
               </span>
             </div>
-            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#0f172a' }}>
+            <h3 style={{ margin: '4px 0 0 0', fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>
               {alert.title}
             </h3>
           </div>
+
           <button
+            type="button"
             onClick={onClose}
             style={{
-              background: 'none',
+              background: '#f1f5f9',
               border: 'none',
-              fontSize: '20px',
+              borderRadius: '50%',
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+              color: '#64748b',
               cursor: 'pointer',
-              color: '#94a3b8',
-              padding: '4px',
             }}
           >
             ✕
           </button>
         </div>
 
-        <div style={{ margin: '20px 0', fontSize: '14px', color: '#334155', lineHeight: 1.6 }}>
-          <p style={{ margin: '0 0 12px 0' }}>{alert.message}</p>
-
-          <div
-            style={{
-              background: '#f8fafc',
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid #e2e8f0',
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '10px',
-              fontSize: '12px',
-            }}
-          >
-            <div>
-              <span style={{ color: '#64748b' }}>Entity Type:</span>{' '}
-              <strong style={{ color: '#0f172a' }}>{alert.entityType || 'General'}</strong>
-            </div>
-            <div>
-              <span style={{ color: '#64748b' }}>First Detected:</span>{' '}
-              <strong style={{ color: '#0f172a' }}>
-                {alert.firstDetectedAt ? new Date(alert.firstDetectedAt).toLocaleDateString() : 'N/A'}
-              </strong>
-            </div>
-            <div>
-              <span style={{ color: '#64748b' }}>Last Detected:</span>{' '}
-              <strong style={{ color: '#0f172a' }}>
-                {alert.lastDetectedAt ? new Date(alert.lastDetectedAt).toLocaleDateString() : 'N/A'}
-              </strong>
-            </div>
-            <div>
-              <span style={{ color: '#64748b' }}>Resolved:</span>{' '}
-              <strong style={{ color: '#0f172a' }}>
-                {alert.resolvedAt ? new Date(alert.resolvedAt).toLocaleDateString() : 'No'}
-              </strong>
-            </div>
-          </div>
-        </div>
+        {/* Message */}
+        <p style={{ margin: '16px 0', fontSize: '14px', color: '#334155', lineHeight: '1.5' }}>
+          {alert.message}
+        </p>
 
         {error && (
-          <div style={{ color: '#ef4444', fontSize: '13px', marginBottom: '16px' }}>{error}</div>
+          <div
+            style={{
+              padding: '10px 14px',
+              borderRadius: '10px',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#991b1b',
+              fontSize: '13px',
+              marginBottom: '16px',
+            }}
+          >
+            {error}
+          </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '24px' }}>
+        {/* Audit Details Box */}
+        <div
+          style={{
+            background: '#f8fafc',
+            borderRadius: '12px',
+            padding: '16px',
+            border: '1px solid #e2e8f0',
+            marginBottom: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            fontSize: '13px',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: '#64748b', fontWeight: 600 }}>Status</span>
+            <strong style={{ color: '#0f172a' }}>{alert.status}</strong>
+          </div>
+          {alert.entityType && (
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: '#64748b', fontWeight: 600 }}>Referenced Entity</span>
+              <strong style={{ color: '#0f172a' }}>{alert.entityType} ({alert.entityId || 'N/A'})</strong>
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: '#64748b', fontWeight: 600 }}>First Detected</span>
+            <span style={{ color: '#334155' }}>{new Date(alert.firstDetectedAt).toLocaleString()}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: '#64748b', fontWeight: 600 }}>Last Updated</span>
+            <span style={{ color: '#334155' }}>{new Date(alert.lastDetectedAt).toLocaleString()}</span>
+          </div>
+          {alert.metadata && Object.keys(alert.metadata).length > 0 && (
+            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
+                Payload Metadata
+              </span>
+              <pre
+                style={{
+                  margin: '4px 0 0 0',
+                  padding: '8px',
+                  background: '#0f172a',
+                  color: '#38bdf8',
+                  borderRadius: '6px',
+                  fontSize: '11.5px',
+                  overflowX: 'auto',
+                }}
+              >
+                {JSON.stringify(alert.metadata, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
           {alert.status === 'OPEN' && (
             <button
+              type="button"
               disabled={updating}
               onClick={() => handleStatusUpdate('ACKNOWLEDGED')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                color: '#334155',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
+              className="dash-btn dash-btn-secondary"
             >
               Acknowledge
             </button>
           )}
 
-          {(alert.status === 'OPEN' || alert.status === 'ACKNOWLEDGED') && (
-            <>
-              <button
-                disabled={updating}
-                onClick={() => handleStatusUpdate('DISMISSED')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  border: '1px solid #fecdd3',
-                  background: '#fff1f2',
-                  color: '#e11d48',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Dismiss
-              </button>
-              <button
-                disabled={updating}
-                onClick={() => handleStatusUpdate('RESOLVED')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: '#059669',
-                  color: '#ffffff',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Mark Resolved
-              </button>
-            </>
+          {alert.status !== 'RESOLVED' && (
+            <button
+              type="button"
+              disabled={updating}
+              onClick={() => handleStatusUpdate('RESOLVED')}
+              className="dash-btn"
+              style={{
+                background: '#059669',
+                color: '#ffffff',
+                border: 'none',
+              }}
+            >
+              Mark Resolved
+            </button>
+          )}
+
+          {alert.status !== 'DISMISSED' && (
+            <button
+              type="button"
+              disabled={updating}
+              onClick={() => handleStatusUpdate('DISMISSED')}
+              className="dash-btn"
+              style={{
+                background: '#f1f5f9',
+                color: '#475569',
+                border: '1px solid #cbd5e1',
+              }}
+            >
+              Dismiss
+            </button>
           )}
         </div>
       </div>
     </div>
   );
 };
+
 export default AlertDetail;

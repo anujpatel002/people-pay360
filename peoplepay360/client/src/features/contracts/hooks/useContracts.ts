@@ -8,14 +8,28 @@ export function useContracts(filters: ContractFilters = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchContracts = () => {
     setLoading(true);
     setError(null);
     getContracts(filters)
       .then(setResult)
       .catch((err) => setError(err?.response?.data?.error ?? 'Failed to load contracts'))
       .finally(() => setLoading(false));
-  }, [filters.employeeId, filters.status, filters.page, filters.limit]);
+  };
 
-  return { ...result, loading, error };
+  useEffect(() => {
+    fetchContracts();
+  }, [
+    filters.employeeId,
+    filters.search,
+    filters.status,
+    filters.department,
+    filters.companyId,
+    filters.sortBy,
+    filters.sortOrder,
+    filters.page,
+    filters.limit,
+  ]);
+
+  return { ...result, loading, error, refetch: fetchContracts };
 }

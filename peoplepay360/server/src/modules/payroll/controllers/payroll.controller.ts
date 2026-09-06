@@ -6,6 +6,7 @@ const actor = (req: RequestWithUser) => req.user;
 export const listPayruns = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.listPayruns(req.query)); } catch(e){next(e);} };
 export const createPayrun = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.status(201).json(await payroll.createPayrun(req.body,actor(req))); } catch(e){next(e);} };
 export const getPayrun = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.getPayrun(req.params.id)); } catch(e){next(e);} };
+export const deletePayrun = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.deletePayrun(req.params.id,actor(req))); } catch(e){next(e);} };
 export const compute = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.computePayrun(req.params.id,actor(req))); } catch(e){next(e);} };
 export const recompute = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.computePayrun(req.params.id,actor(req),true)); } catch(e){next(e);} };
 export const validate = async (req: RequestWithUser,res:Response,next:NextFunction) => { try { res.json(await payroll.validatePayrun(req.params.id,actor(req))); } catch(e){next(e);} };

@@ -39,6 +39,7 @@ export const updateAllocationSchema = allocationBase
   });
 
 export const createRequestSchema = z.object({
+  employeeId: z.string().optional(),
   typeId:    z.string().min(1, 'typeId is required'),
   startDate: z.string().regex(DATE_ONLY, 'startDate must use YYYY-MM-DD format'),
   endDate:   z.string().regex(DATE_ONLY, 'endDate must use YYYY-MM-DD format'),

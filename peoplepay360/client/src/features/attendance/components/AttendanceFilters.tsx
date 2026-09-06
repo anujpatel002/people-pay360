@@ -1,4 +1,3 @@
-import React from 'react';
 import { AttendanceFilters, AttendanceStatus } from '../types/attendance.types';
 
 interface Props {
@@ -17,104 +16,116 @@ const STATUSES: AttendanceStatus[] = [
 ];
 
 export default function AttendanceFiltersBar({ filters, onChange, onReset }: Props) {
+  const hasFilters = Boolean(
+    filters.search ||
+    filters.status ||
+    filters.dateFrom ||
+    filters.dateTo ||
+    filters.employeeId ||
+    (filters.sortBy && filters.sortBy !== 'date') ||
+    (filters.sortOrder && filters.sortOrder !== 'desc')
+  );
+
   return (
-    <div style={styles.container}>
-      <input
-        type="text"
-        placeholder="Search employee or notes..."
-        value={filters.search ?? ''}
-        onChange={(e) => onChange({ search: e.target.value || undefined })}
-        style={styles.searchInput}
-      />
+    <div className="app-filter-bar" style={{ width: '100%' }}>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', flex: 1, alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: '280px' }}>
+          <input
+            type="text"
+            className="app-input"
+            placeholder="Search employee or notes..."
+            value={filters.search ?? ''}
+            onChange={(e) => onChange({ search: e.target.value || undefined })}
+            style={{ width: '100%', paddingLeft: '32px' }}
+          />
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#94a3b8"
+            strokeWidth="2"
+            style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </div>
 
-      <select
-        value={filters.status ?? ''}
-        onChange={(e) => onChange({ status: e.target.value || undefined })}
-        style={styles.select}
-      >
-        <option value="">All Statuses</option>
-        {STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
+        <select
+          className="app-select"
+          value={filters.status ?? ''}
+          onChange={(e) => onChange({ status: (e.target.value as AttendanceStatus) || undefined })}
+          style={{ minWidth: '150px' }}
+        >
+          <option value="">All Statuses</option>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
 
-      <div style={styles.dateGroup}>
-        <label style={styles.dateLabel}>From:</label>
-        <input
-          type="date"
-          value={filters.dateFrom ?? ''}
-          onChange={(e) => onChange({ dateFrom: e.target.value || undefined })}
-          style={styles.dateInput}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>From:</span>
+          <input
+            type="date"
+            className="app-input"
+            value={filters.dateFrom ?? ''}
+            onChange={(e) => onChange({ dateFrom: e.target.value || undefined })}
+            style={{ width: '135px', padding: '5px 8px', fontSize: '12.5px' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>To:</span>
+          <input
+            type="date"
+            className="app-input"
+            value={filters.dateTo ?? ''}
+            onChange={(e) => onChange({ dateTo: e.target.value || undefined })}
+            style={{ width: '135px', padding: '5px 8px', fontSize: '12.5px' }}
+          />
+        </div>
+
+        {/* Sort Selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Sort:</span>
+          <select
+            className="app-select"
+            value={filters.sortBy ?? 'date'}
+            onChange={(e) => onChange({ sortBy: e.target.value })}
+            style={{ minWidth: '140px' }}
+          >
+            <option value="date">Date</option>
+            <option value="employeeName">Employee Name</option>
+            <option value="checkIn">Check In Time</option>
+            <option value="workedMinutes">Worked Hours</option>
+            <option value="overtimeMinutes">Overtime</option>
+            <option value="status">Status</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => onChange({ sortOrder: (filters.sortOrder ?? 'desc') === 'desc' ? 'asc' : 'desc' })}
+            className="app-btn app-btn-secondary"
+            style={{ padding: '7px 10px', fontSize: '12px' }}
+            title={`Order: ${filters.sortOrder === 'asc' ? 'Ascending' : 'Descending'}`}
+          >
+            {(filters.sortOrder ?? 'desc') === 'asc' ? '↑ ASC' : '↓ DESC'}
+          </button>
+        </div>
+
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="app-btn app-btn-secondary"
+            style={{ padding: '6px 12px', fontSize: '12px', color: '#dc2626' }}
+          >
+            ✕ Clear Filters
+          </button>
+        )}
       </div>
-
-      <div style={styles.dateGroup}>
-        <label style={styles.dateLabel}>To:</label>
-        <input
-          type="date"
-          value={filters.dateTo ?? ''}
-          onChange={(e) => onChange({ dateTo: e.target.value || undefined })}
-          style={styles.dateInput}
-        />
-      </div>
-
-      {(filters.search || filters.status || filters.dateFrom || filters.dateTo || filters.employeeId) && (
-        <button onClick={onReset} style={styles.resetBtn}>
-          Clear Filters
-        </button>
-      )}
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: 'flex',
-    gap: '0.75rem',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    marginBottom: '1rem',
-  },
-  searchInput: {
-    padding: '0.45rem 0.75rem',
-    borderRadius: 6,
-    border: '1px solid #d1d5db',
-    fontSize: '0.875rem',
-    minWidth: 220,
-  },
-  select: {
-    padding: '0.45rem 0.75rem',
-    borderRadius: 6,
-    border: '1px solid #d1d5db',
-    fontSize: '0.875rem',
-    background: '#ffffff',
-  },
-  dateGroup: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-  },
-  dateLabel: {
-    fontSize: '0.8rem',
-    color: '#64748b',
-    fontWeight: 500,
-  },
-  dateInput: {
-    padding: '0.4rem 0.6rem',
-    borderRadius: 6,
-    border: '1px solid #d1d5db',
-    fontSize: '0.875rem',
-  },
-  resetBtn: {
-    padding: '0.4rem 0.75rem',
-    background: '#f1f5f9',
-    border: '1px solid #e2e8f0',
-    borderRadius: 6,
-    cursor: 'pointer',
-    fontSize: '0.8rem',
-    color: '#475569',
-    fontWeight: 500,
-  },
-};

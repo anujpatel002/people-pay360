@@ -10,22 +10,67 @@ export default function EmployeePersonalInfo({ values, onChange, readOnly }: Pro
   const field = (key: keyof EmployeeFormValues) => ({
     value: (values[key] as string) ?? '',
     disabled: readOnly,
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange({ [key]: e.target.value || undefined }),
-    style: { padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 6, width: '100%' },
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      onChange({ [key]: e.target.value || undefined }),
+    className: 'app-input',
   });
 
   return (
-    <section>
-      <h4 style={{ margin: '0 0 12px', color: '#111827' }}>Personal Information</h4>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <label>First Name<input {...field('firstName')} /></label>
-        <label>Last Name<input {...field('lastName')} /></label>
-        <label>Work Email<input type="email" {...field('workEmail')} /></label>
-        <label>Phone<input {...field('phone')} /></label>
-        <label style={{ gridColumn: '1/-1' }}>Private Address<input {...field('privateAddress')} /></label>
-        <label>Emergency Contact<input {...field('emergencyContact')} /></label>
-        <label>Emergency Contact Phone<input {...field('emergencyContactPhone')} /></label>
+    <div className="app-form-section">
+      <div className="app-form-section-header">
+        <div>
+          <h4 className="app-form-section-title">
+            <span style={{ fontSize: '18px' }}>👤</span> Personal & Contact Details
+          </h4>
+          <p className="app-form-section-subtitle">
+            Primary identification, work email, personal contact number, address, and emergency contact details
+          </p>
+        </div>
       </div>
-    </section>
+
+      <div className="app-form-grid">
+        <div className="app-form-group">
+          <label className="app-label">
+            First Name <span className="app-label-required">*</span>
+          </label>
+          <input placeholder="e.g. John" {...field('firstName')} required />
+        </div>
+
+        <div className="app-form-group">
+          <label className="app-label">
+            Last Name <span className="app-label-required">*</span>
+          </label>
+          <input placeholder="e.g. Doe" {...field('lastName')} required />
+        </div>
+
+        <div className="app-form-group">
+          <label className="app-label">
+            Work Email <span className="app-label-required">*</span>
+          </label>
+          <input type="email" placeholder="john.doe@company.com" {...field('workEmail')} required />
+        </div>
+
+        <div className="app-form-group">
+          <label className="app-label">Phone Number</label>
+          <input type="tel" placeholder="+91 98765 43210" {...field('phone')} />
+        </div>
+
+        <div className="app-form-group app-form-group-full">
+          <label className="app-label">Private Residential Address</label>
+          <input placeholder="Apartment / Suite, Street Address, City, State, Postal Code" {...field('privateAddress')} />
+        </div>
+
+        <div className="app-form-group">
+          <label className="app-label">Emergency Contact Name</label>
+          <input placeholder="e.g. Jane Doe (Spouse)" {...field('emergencyContact')} />
+        </div>
+
+        <div className="app-form-group">
+          <label className="app-label">Emergency Contact Phone</label>
+          <input type="tel" placeholder="+91 98765 00000" {...field('emergencyContactPhone')} />
+        </div>
+      </div>
+    </div>
   );
 }
+

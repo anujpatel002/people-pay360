@@ -85,12 +85,12 @@ export async function remove(id: string): Promise<void> {
 }
 
 export async function isReferenced(id: string): Promise<boolean> {
-  const [[row]] = await pool.execute<(RowDataPacket & { total: number })[]>(
+  const [rows] = await pool.execute<RowDataPacket[]>(
     `SELECT (
        (SELECT COUNT(*) FROM employees WHERE schedule_id = ?) +
        (SELECT COUNT(*) FROM contracts  WHERE schedule_id = ?)
      ) AS total`,
     [id, id]
   );
-  return row.total > 0;
+  return Number((rows[0] as any)?.total ?? 0) > 0;
 }

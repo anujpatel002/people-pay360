@@ -58,7 +58,7 @@ export interface AttendanceFilters {
   search?: string;
   page?: number;
   limit?: number;
-  sortBy?: 'date' | 'checkIn' | 'workedMinutes' | 'status';
+  sortBy?: 'date' | 'checkIn' | 'workedMinutes' | 'status' | 'employeeName' | 'overtimeMinutes' | string;
   sortOrder?: 'asc' | 'desc';
 }
 

@@ -1,26 +1,50 @@
-import { EmployeeFormValues } from '../types/employee.types';
+import { EmployeeFormValues, EmployeeLookups } from '../types/employee.types';
 
 interface Props {
   values: Partial<EmployeeFormValues>;
   onChange: (patch: Partial<EmployeeFormValues>) => void;
   readOnly?: boolean;
+  lookups?: EmployeeLookups | null;
 }
 
-export default function EmployeeScheduleInfo({ values, onChange, readOnly }: Props) {
+export default function EmployeeScheduleInfo({ values, onChange, readOnly, lookups }: Props) {
+  const schedules = lookups?.schedules ?? [];
+
   return (
-    <section>
-      <h4 style={{ margin: '0 0 12px', color: '#111827' }}>Working Schedule</h4>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <label>
-          Schedule ID
-          <input
+    <div className="app-form-section">
+      <div className="app-form-section-header">
+        <div>
+          <h4 className="app-form-section-title">
+            <span style={{ fontSize: '18px' }}>⏱️</span> Working Schedule & Shift Assignment
+          </h4>
+          <p className="app-form-section-subtitle">
+            Assign standard weekly shift boundaries, work hours, attendance expectations, and weekend policy
+          </p>
+        </div>
+      </div>
+
+      <div className="app-form-grid">
+        <div className="app-form-group app-form-group-full">
+          <label className="app-label">Assigned Working Schedule</label>
+          <select
+            className="app-select"
             value={values.scheduleId ?? ''}
             disabled={readOnly}
             onChange={(e) => onChange({ scheduleId: e.target.value || undefined })}
-            style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 6, width: '100%' }}
-          />
-        </label>
+          >
+            <option value="">Default Corporate Schedule (Standard 40h)</option>
+            {schedules.map((sch) => (
+              <option key={sch.id} value={sch.id}>
+                {sch.name} — {sch.weeklyHours}h/week ({sch.company || 'Corporate'})
+              </option>
+            ))}
+          </select>
+          <span style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+            Specifies daily work shift timings, break periods, and total standard weekly hours.
+          </span>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }
+

@@ -28,8 +28,11 @@ export const getRequests = (params?: Record<string, string | number>) =>
 export const getRequest = (id: string) =>
   http.get<TimeOffRequest>(`/time-off/requests/${id}`).then(r => r.data);
 
-export const createRequest = (data: { typeId: string; startDate: string; endDate: string; days: number; reason?: string }) =>
+export const createRequest = (data: { employeeId?: string; typeId: string; startDate: string; endDate: string; days: number; reason?: string }) =>
   http.post<TimeOffRequest>('/time-off/requests', data).then(r => r.data);
+
+export const getRequestsByEmployee = (employeeId: string) =>
+  http.get<PaginatedResult<TimeOffRequest>>('/time-off/requests', { params: { employeeId, limit: 50 } }).then(r => r.data);
 
 export const approveRequest = (id: string) =>
   http.put<TimeOffRequest>(`/time-off/requests/${id}/approve`).then(r => r.data);

@@ -16,6 +16,7 @@ describe('exception-detector.service', () => {
       checkIn: '2026-09-05T08:55:00Z',
       checkOut: null,
       dayConfig: { day: 'monday', active: true, start: '09:00', end: '23:59', breakMinutes: 60 },
+      now: new Date('2026-09-05T12:00:00Z'),
     });
     expect(status).toBe('Present');
   });

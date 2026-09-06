@@ -18,33 +18,28 @@ export const DepartmentOverview: React.FC<DepartmentOverviewProps> = ({ data }) 
   const totalSalary = data.reduce((acc, curr) => acc + curr.monthlySalary, 0);
 
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        borderRadius: '16px',
-        padding: '24px',
-        boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-        border: '1px solid #e2e8f0',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div className="dash-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
+          <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>
             Department Overview
           </h3>
-          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>
-            Headcount distribution and monthly payroll commitments by team
+          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--dash-text-muted)' }}>
+            Headcount distribution and monthly payroll commitment by business team
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
           <span
             style={{
               fontSize: '12px',
-              fontWeight: 600,
+              fontWeight: 700,
               background: '#f1f5f9',
               padding: '6px 12px',
               borderRadius: '8px',
               color: '#334155',
+              border: '1px solid #e2e8f0',
             }}
           >
             {totalHeadcount} Total Headcount
@@ -52,11 +47,13 @@ export const DepartmentOverview: React.FC<DepartmentOverviewProps> = ({ data }) 
           <span
             style={{
               fontSize: '12px',
-              fontWeight: 600,
-              background: '#e0e7ff',
+              fontWeight: 700,
+              background: 'var(--dash-primary-light)',
               padding: '6px 12px',
               borderRadius: '8px',
-              color: '#4338ca',
+              color: 'var(--dash-primary)',
+              border: '1px solid var(--dash-primary-border)',
+              fontVariantNumeric: 'tabular-nums',
             }}
           >
             {formatCurrency(totalSalary)} Monthly
@@ -64,19 +61,27 @@ export const DepartmentOverview: React.FC<DepartmentOverviewProps> = ({ data }) 
         </div>
       </div>
 
+      {/* Table */}
       {data.length === 0 ? (
-        <div style={{ padding: '32px 0', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
+        <div
+          style={{
+            padding: '36px 16px',
+            textAlign: 'center',
+            color: 'var(--dash-text-subtle)',
+            fontSize: '13.5px',
+          }}
+        >
           No department data available.
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13.5px' }}>
             <thead>
-              <tr style={{ borderBottom: '2px solid #f1f5f9', color: '#64748b', fontSize: '12px', textTransform: 'uppercase' }}>
-                <th style={{ padding: '12px 16px' }}>Department</th>
-                <th style={{ padding: '12px 16px' }}>Headcount</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Monthly Net Salary</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Avg Net / Employee</th>
+              <tr style={{ borderBottom: '2px solid #f1f5f9', color: '#64748b', fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <th style={{ padding: '12px 14px', fontWeight: 700 }}>Department</th>
+                <th style={{ padding: '12px 14px', fontWeight: 700 }}>Headcount</th>
+                <th style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700 }}>Monthly Net Salary</th>
+                <th style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700 }}>Avg Net / Employee</th>
               </tr>
             </thead>
             <tbody>
@@ -97,37 +102,48 @@ export const DepartmentOverview: React.FC<DepartmentOverviewProps> = ({ data }) 
                       e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                   >
-                    <td style={{ padding: '14px 16px', fontWeight: 600, color: '#1e293b' }}>
+                    <td style={{ padding: '14px', fontWeight: 700, color: '#0f172a' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span
+                        <div
                           style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: row.department === 'Unassigned' ? '#94a3b8' : '#6366f1',
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '8px',
+                            background: '#eef2ff',
+                            color: '#4f46e5',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '11px',
+                            fontWeight: 800,
                           }}
-                        />
-                        {row.department || 'Unassigned'}
+                        >
+                          {(row.department || 'UN')[0]}
+                        </div>
+                        <span>{row.department || 'Unassigned'}</span>
                       </div>
                     </td>
-                    <td style={{ padding: '14px 16px', color: '#334155' }}>
+
+                    <td style={{ padding: '14px', color: '#334155' }}>
                       <span
                         style={{
                           background: '#f1f5f9',
                           padding: '3px 8px',
                           borderRadius: '6px',
+                          fontWeight: 650,
                           fontSize: '12px',
-                          fontWeight: 600,
                         }}
                       >
-                        {row.headcount} {row.headcount === 1 ? 'employee' : 'employees'}
+                        {row.headcount} members
                       </span>
                     </td>
-                    <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
+
+                    <td style={{ padding: '14px', textAlign: 'right', fontWeight: 800, color: '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
                       {formatCurrency(row.monthlySalary)}
                     </td>
-                    <td style={{ padding: '14px 16px', textAlign: 'right', color: '#64748b', fontSize: '13px' }}>
-                      {row.headcount > 0 ? formatCurrency(avg) : '—'}
+
+                    <td style={{ padding: '14px', textAlign: 'right', fontWeight: 700, color: '#475569', fontVariantNumeric: 'tabular-nums' }}>
+                      {formatCurrency(avg)}
                     </td>
                   </tr>
                 );
@@ -139,4 +155,5 @@ export const DepartmentOverview: React.FC<DepartmentOverviewProps> = ({ data }) 
     </div>
   );
 };
+
 export default DepartmentOverview;

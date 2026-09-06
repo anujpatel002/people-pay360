@@ -58,20 +58,29 @@ export interface Attendance {
 }
 
 function formatDateOnly(d: string | Date): string {
+  if (!d) return '';
   if (typeof d === 'string') {
     return d.slice(0, 10);
   }
-  return d.toISOString().slice(0, 10);
+  try {
+    return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+  } catch {
+    return '';
+  }
 }
 
 function formatIso(d: Date | string | null): string | null {
   if (!d) return null;
-  if (typeof d === 'string') {
-    // If it's already an ISO string or MySQL datetime 'YYYY-MM-DD HH:MM:SS'
-    if (d.includes('T')) return d;
-    return new Date(d.replace(' ', 'T') + 'Z').toISOString();
+  try {
+    if (typeof d === 'string') {
+      if (d.includes('T')) return d;
+      const parsed = new Date(d.replace(' ', 'T') + 'Z');
+      return isNaN(parsed.getTime()) ? d : parsed.toISOString();
+    }
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  } catch {
+    return null;
   }
-  return d.toISOString();
 }
 
 export function toAttendance(row: AttendanceRow): Attendance {

@@ -33,3 +33,22 @@ export interface ContractFormValues {
   structureId?: string;
   notes?: string;
 }
+
+export interface ContractLookups {
+  employees: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    name: string;
+    employeeNumber?: string;
+    departmentName?: string;
+    jobTitle?: string;
+    scheduleId?: string;
+    companyId?: string;
+    workEmail?: string;
+  }[];
+  departments: { id: string; name: string; code: string }[];
+  schedules: { id: string; name: string; weeklyHours: number; company?: string; timezone?: string }[];
+  structures: { id: string; name: string; isActive: boolean }[];
+  jobPositions: { title: string; departmentName?: string }[];
+}

@@ -35,6 +35,7 @@ export default function AppRouter() {
 
             <Route path="/attendance" element={<AttendanceListPage />} />
             <Route path="/attendance/:id" element={<AttendanceFormPage />} />
+            <Route path="/time-off" element={<Navigate to="/time-off/requests" replace />} />
             <Route path="/time-off/requests" element={<RequestListPage />} />
             <Route path="/time-off/requests/new" element={<RequestFormPage />} />
             <Route path="/employees/:id" element={<EmployeeFormPage />} />

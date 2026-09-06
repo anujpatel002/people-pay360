@@ -117,22 +117,50 @@ function buildPhone(index: number): string {
 }
 
 const FIRST_NAMES = [
-  'Aarav', 'Aditi', 'Aditya', 'Akash', 'Akshay', 'Aman', 'Amit', 'Ananya',
-  'Anika', 'Anil', 'Anjali', 'Ankit', 'Anuj', 'Arjun', 'Arnav', 'Arpita',
-  'Aryan', 'Ashish', 'Avani', 'Bhavya', 'Chetan', 'Deepak', 'Deepika',
-  'Dev', 'Dhruv', 'Diya', 'Gaurav', 'Isha', 'Ishaan', 'Jatin', 'Karan',
-  'Kavya', 'Kiran', 'Krishna', 'Manish', 'Meera', 'Mohit', 'Naina',
-  'Neha', 'Nikhil', 'Nisha', 'Pallavi', 'Pooja', 'Pranav', 'Priya',
-  'Rahul', 'Raj', 'Riya', 'Rohan', 'Rohit', 'Sahil', 'Sakshi', 'Sameer',
-  'Sana', 'Sanjay', 'Shivam', 'Shreya', 'Sneha', 'Sonia', 'Tanvi',
-  'Varun', 'Vikas', 'Vikram', 'Vivek', 'Yash', 'Zoya',
+  'Aadesh', 'Aarav', 'Abhay', 'Abhinav', 'Aditi', 'Aditya', 'Advait', 'Ahana',
+  'Ajay', 'Akash', 'Akhil', 'Akshay', 'Alok', 'Aman', 'Amar', 'Amrita',
+  'Anand', 'Ananya', 'Anik', 'Anika', 'Anil', 'Anirudh', 'Anisha', 'Anjali',
+  'Ankit', 'Ansh', 'Anshul', 'Anupama', 'Aparna', 'Arjun', 'Arnav', 'Arpita',
+  'Arun', 'Aryan', 'Ashish', 'Ashok', 'Avani', 'Ayush', 'Bharat', 'Bhavesh',
+  'Bhavya', 'Chetan', 'Chinmay', 'Damini', 'Darshan', 'Deepak', 'Deepika', 'Dev',
+  'Devendra', 'Dhanush', 'Dhruv', 'Divya', 'Diya', 'Esha', 'Gajendra', 'Ganesh',
+  'Gaurav', 'Gautam', 'Geeta', 'Girish', 'Harish', 'Harsh', 'Hemant', 'Hiten',
+  'Inder', 'Ipshita', 'Ira', 'Isha', 'Ishaan', 'Jagdish', 'Jatin', 'Jayant',
+  'Jitendra', 'Juhi', 'Jyoti', 'Kailash', 'Kamal', 'Karan', 'Kartik', 'Kashvi',
+  'Kavya', 'Kiran', 'Kishore', 'Krishna', 'Kunal', 'Lavanya', 'Lokesh', 'Madhav',
+  'Manas', 'Manish', 'Manoj', 'Mayank', 'Meera', 'Mehul', 'Mohan', 'Mohit',
+  'Mukesh', 'Naina', 'Naveen', 'Navin', 'Nihar', 'Nikhil', 'Nilam', 'Nilesh',
+  'Nirav', 'Nisha', 'Nitin', 'Omkar', 'Pallavi', 'Pankaj', 'Parth', 'Pooja',
+  'Pradeep', 'Prakash', 'Pranav', 'Pranay', 'Prasad', 'Prateek', 'Pravin', 'Preeti',
+  'Purvi', 'Rachit', 'Raghav', 'Raj', 'Rajesh', 'Rakesh', 'Raman', 'Ramesh',
+  'Rashmi', 'Ratan', 'Ravi', 'Reena', 'Rishi', 'Ritesh', 'Ritu', 'Riya',
+  'Rohan', 'Rohit', 'Ronak', 'Roshan', 'Ruchir', 'Sachin', 'Sagar', 'Sahil',
+  'Sakshi', 'Sameer', 'Samir', 'Samrat', 'Sana', 'Sandeep', 'Sanjay', 'Sanjeev',
+  'Santosh', 'Sarita', 'Sarthak', 'Satish', 'Saurabh', 'Seema', 'Shailesh', 'Shankar',
+  'Sharad', 'Shashi', 'Shivam', 'Shreya', 'Shruti', 'Siddharth', 'Smita', 'Soham',
+  'Sonia', 'Sourav', 'Subhash', 'Sudhir', 'Sujay', 'Sumit', 'Sunil', 'Suresh',
+  'Surya', 'Sushant', 'Tanmay', 'Tanvi', 'Tarun', 'Tejas', 'Trisha', 'Tushar',
+  'Uday', 'Ujjwal', 'Umang', 'Utkarsh', 'Vaibhav', 'Varun', 'Vasant', 'Vedant',
+  'Vicky', 'Vikas', 'Vimal', 'Vinay', 'Vineet', 'Vinod', 'Vipin', 'Virendra',
+  'Vishal', 'Vivek', 'Yash', 'Yogesh', 'Zoya',
 ];
 
 const LAST_NAMES = [
-  'Sharma', 'Patel', 'Kumar', 'Singh', 'Verma', 'Gupta', 'Mehta', 'Shah',
-  'Desai', 'Joshi', 'Reddy', 'Rao', 'Nair', 'Iyer', 'Kapoor', 'Malhotra',
-  'Bansal', 'Chopra', 'Agarwal', 'Saxena', 'Mishra', 'Pandey', 'Tiwari',
-  'Sinha', 'Jain', 'Sethi', 'Arora', 'Khanna', 'Bhatia', 'Choudhary',
+  'Acharya', 'Adhikari', 'Agarwal', 'Agnihotri', 'Ahluwalia', 'Bakshi', 'Banerjee', 'Bansal',
+  'Basu', 'Bhaduri', 'Bhalla', 'Bhardwaj', 'Bhat', 'Bhatia', 'Bhatt', 'Bhattacharya',
+  'Biswas', 'Bose', 'Chakraborty', 'Chatterjee', 'Chauhan', 'Chhabra', 'Chopra', 'Choudhary',
+  'Dadhich', 'Das', 'Dasgupta', 'Dhar', 'Dubey', 'Dutta', 'Dwivedi', 'Gaikwad',
+  'Gandhi', 'Ganguly', 'Garg', 'Ghoshal', 'Gokhale', 'Goswami', 'Grover', 'Iyengar',
+  'Jadhav', 'Jain', 'Jha', 'Kapoor', 'Kashyap', 'Kaul', 'Kaur', 'Kaushik',
+  'Khan', 'Khanna', 'Khatri', 'Kothari', 'Kulkarni', 'Majumdar', 'Malhotra', 'Mallick',
+  'Mandal', 'Mathur', 'Mishra', 'Mitra', 'Mittal', 'Modi', 'Mohan', 'Mukherjee',
+  'Munshi', 'Nambiar', 'Narayan', 'Nath', 'Nigam', 'Padmanabhan', 'Pai', 'Pandey',
+  'Panicker', 'Pant', 'Pathak', 'Patnaik', 'Paul', 'Pillai', 'Purohit', 'Qureshi',
+  'Radhakrishnan', 'Ranganathan', 'Rathore', 'Rawat', 'Roy', 'Saha', 'Sahni', 'Salunkhe',
+  'Sanyal', 'Sarabhai', 'Sardesai', 'Sarkar', 'Sarma', 'Sawant', 'Saxena', 'Sen',
+  'Sengupta', 'Sethi', 'Shinde', 'Shukla', 'Singhal', 'Sinha', 'Somani', 'Srivastava',
+  'Subramanian', 'Swaminathan', 'Talwar', 'Tandon', 'Thakur', 'Tripathi', 'Trivedi', 'Upadhyay',
+  'Vaidya', 'Varghese', 'Venkataraman', 'Vyas', 'Wadhwa', 'Walia', 'Yadav',
 ];
 
 const JOBS = [
@@ -204,10 +232,30 @@ async function getDepartments(conn: any): Promise<Department[]> {
 
 function makeEmployees(departments: Department[]): EmployeeSeed[] {
   const employees: EmployeeSeed[] = [];
+  const usedNames = new Set<string>([
+    'Anuj Patel', 'Priya Sharma', 'Neha Desai', 'Rahul Verma',
+    'Vikram Singh', 'Sneha Patel', 'Amit Kumar', 'Kavita Reddy', 'Ahmed Abbas',
+  ]);
 
   for (let i = 1; i <= TOTAL_EMPLOYEES; i++) {
-    const firstName = FIRST_NAMES[(i - 1) % FIRST_NAMES.length];
-    const lastName = LAST_NAMES[Math.floor((i - 1) / FIRST_NAMES.length) % LAST_NAMES.length];
+    let fnIdx = (i - 1) % FIRST_NAMES.length;
+    let lnIdx = Math.floor((i - 1) / FIRST_NAMES.length) % LAST_NAMES.length;
+    let firstName = FIRST_NAMES[fnIdx];
+    let lastName = LAST_NAMES[lnIdx];
+
+    let attempt = 0;
+    while (usedNames.has(`${firstName} ${lastName}`) && attempt < 1000) {
+      fnIdx = (fnIdx + 1) % FIRST_NAMES.length;
+      if (fnIdx === 0) {
+        lnIdx = (lnIdx + 1) % LAST_NAMES.length;
+      }
+      firstName = FIRST_NAMES[fnIdx];
+      lastName = LAST_NAMES[lnIdx];
+      attempt++;
+    }
+
+    usedNames.add(`${firstName} ${lastName}`);
+
     const job = JOBS[(i - 1) % JOBS.length];
     const department = departments[(i - 1) % departments.length];
 
@@ -373,9 +421,14 @@ async function insertAttendance(conn: any, employees: EmployeeSeed[]) {
   for (let start = 0; start < employees.length; start += 500) {
     const batch = employees.slice(start, start + 500);
     const placeholders = batch.map(() => '?').join(', ');
+    const empIds = batch.map((employee) => employee.id);
+    await conn.execute(
+      `DELETE ac FROM attendance_corrections ac JOIN attendance_records a ON a.id = ac.attendance_id WHERE a.employee_id IN (${placeholders})`,
+      empIds,
+    );
     await conn.execute(
       `DELETE FROM attendance_records WHERE employee_id IN (${placeholders})`,
-      batch.map((employee) => employee.id),
+      empIds,
     );
   }
 
@@ -769,16 +822,12 @@ async function seed() {
     console.log(' PeoplePay360 — 3,000 Employee Demo Data Seeder');
     console.log('========================================================');
 
-    const [companyRows] = await conn.execute(
-      `SELECT id, name FROM companies WHERE id = ? AND deleted_at IS NULL LIMIT 1`,
+    await conn.execute(
+      `INSERT INTO companies (id, code, name, currency_code)
+       VALUES (?, 'PEOPLEPAY360', 'PeoplePay360 Inc.', 'INR')
+       ON DUPLICATE KEY UPDATE name = VALUES(name)`,
       [IDS.company],
     );
-
-    if (!Array.isArray(companyRows) || companyRows.length === 0) {
-      throw new Error(
-        `Company ${IDS.company} was not found. Run the reference seed first, or update IDS.company.`,
-      );
-    }
 
     const departments = await getDepartments(conn);
     console.log(`  ✓ Departments ready (${departments.length})`);

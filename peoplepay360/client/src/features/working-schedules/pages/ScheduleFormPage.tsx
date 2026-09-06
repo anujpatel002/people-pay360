@@ -7,18 +7,17 @@ import { DayPattern, DEFAULT_DAYS } from '../types';
 
 export default function ScheduleFormPage() {
   const { id } = useParams<{ id: string }>();
-  const isEdit  = !!id && id !== 'new';
+  const isEdit = !!id && id !== 'new';
   const navigate = useNavigate();
 
-  const { data: existing, isLoading: loading } = { data: null, isLoading: false };
   const { data: fetched, loading: fetchLoading } = useSchedule(isEdit ? id! : '');
 
-  const [name,     setName]     = useState('');
-  const [company,  setCompany]  = useState('');
+  const [name, setName] = useState('');
+  const [company, setCompany] = useState('');
   const [timezone, setTimezone] = useState('UTC');
-  const [days,     setDays]     = useState<DayPattern[]>(DEFAULT_DAYS);
-  const [saving,   setSaving]   = useState(false);
-  const [error,    setError]    = useState<string | null>(null);
+  const [days, setDays] = useState<DayPattern[]>(DEFAULT_DAYS);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (fetched) {
@@ -41,73 +40,149 @@ export default function ScheduleFormPage() {
       }
       navigate('/working-schedules');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Something went wrong';
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+        'Something went wrong';
       setError(msg);
     } finally {
       setSaving(false);
     }
   }
 
-  if (isEdit && fetchLoading) return <p style={{ padding: '2rem', color: '#6b7280' }}>Loading…</p>;
+  if (isEdit && fetchLoading) {
+    return (
+      <div className="app-page">
+        <div className="app-page-container" style={{ textAlign: 'center', padding: '60px 0', color: '#64748b' }}>
+          Loading schedule details...
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={s.page}>
-      <div style={s.header}>
-        <button style={s.back} onClick={() => navigate('/working-schedules')}>← Back</button>
-        <h2 style={s.title}>{isEdit ? 'Edit Schedule' : 'New Schedule'}</h2>
+    <div className="app-page">
+      <div className="app-page-container" style={{ maxWidth: '880px' }}>
+        {/* Header */}
+        <div className="app-page-header">
+          <div className="app-page-title-group">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/working-schedules')}
+                className="app-btn app-btn-secondary"
+                style={{ padding: '4px 8px', fontSize: '12px' }}
+              >
+                ← Back
+              </button>
+              <h1 className="app-page-title">
+                {isEdit ? `Edit Schedule: ${name || fetched?.name || ''}` : 'New Working Schedule'}
+              </h1>
+            </div>
+            <p className="app-page-subtitle">
+              Configure baseline shift hours, break durations, and company assignments
+            </p>
+          </div>
+        </div>
+
+        {error && (
+          <div
+            style={{
+              padding: '14px 18px',
+              borderRadius: '10px',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#991b1b',
+              fontSize: '13.5px',
+              marginBottom: '20px',
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="app-card" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* General Information */}
+          <div>
+            <h3 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
+              Schedule Details
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+              <div className="app-form-group">
+                <label className="app-label">Schedule Name *</label>
+                <input
+                  className="app-input"
+                  placeholder="e.g. Standard 40h Full-Time"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="app-form-group">
+                <label className="app-label">Company *</label>
+                <input
+                  className="app-input"
+                  placeholder="e.g. Acme Corp"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="app-form-group">
+                <label className="app-label">Timezone</label>
+                <input
+                  className="app-input"
+                  placeholder="e.g. Asia/Kolkata or UTC"
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: 0 }} />
+
+          {/* Weekly Pattern */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
+                  Weekly Shift Schedule
+                </h3>
+                <p style={{ margin: '2px 0 0', fontSize: '12.5px', color: '#64748b' }}>
+                  Toggle active days and configure work shift start, end, and unpaid break times.
+                </p>
+              </div>
+            </div>
+
+            <WeeklyPatternEditor days={days} onChange={setDays} />
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: 0 }} />
+
+          {/* Actions */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '13px', color: '#64748b' }}>
+              Total Weekly Hours:{' '}
+              <strong style={{ color: '#0f172a' }}>{computeWeeklyHours(days)} hrs</strong>
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="button"
+                className="app-btn app-btn-secondary"
+                onClick={() => navigate('/working-schedules')}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="app-btn app-btn-primary" disabled={saving}>
+                {saving ? 'Saving Schedule...' : isEdit ? 'Save Changes' : 'Create Schedule'}
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
-
-      <form onSubmit={handleSubmit} style={s.form}>
-        <div style={s.row}>
-          <label style={s.label}>
-            Schedule Name
-            <input style={s.input} value={name} onChange={(e) => setName(e.target.value)} required />
-          </label>
-          <label style={s.label}>
-            Company
-            <input style={s.input} value={company} onChange={(e) => setCompany(e.target.value)} required />
-          </label>
-          <label style={s.label}>
-            Timezone
-            <input style={s.input} value={timezone} onChange={(e) => setTimezone(e.target.value)} />
-          </label>
-        </div>
-
-        <div>
-          <p style={s.sectionLabel}>Weekly Pattern</p>
-          <WeeklyPatternEditor days={days} onChange={setDays} />
-        </div>
-
-        <div style={s.summary}>
-          Computed Weekly Hours: <strong>{computeWeeklyHours(days)}h</strong>
-        </div>
-
-        {error && <p style={s.error}>{error}</p>}
-
-        <div style={s.actions}>
-          <button type="button" style={s.btnSecondary} onClick={() => navigate('/working-schedules')}>Cancel</button>
-          <button type="submit" style={s.btnPrimary} disabled={saving}>
-            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Schedule'}
-          </button>
-        </div>
-      </form>
     </div>
   );
 }
-
-const s: Record<string, React.CSSProperties> = {
-  page: { padding: '2rem', maxWidth: 760, margin: '0 auto' },
-  header: { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' },
-  title: { margin: 0, fontSize: '1.3rem', fontWeight: 700 },
-  back: { background: 'none', border: 'none', color: '#4f46e5', cursor: 'pointer', fontSize: '0.9rem', padding: 0 },
-  form: { display: 'flex', flexDirection: 'column', gap: '1.25rem', background: '#fff', padding: '1.5rem', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' },
-  row: { display: 'flex', gap: '1rem', flexWrap: 'wrap' },
-  label: { display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.875rem', fontWeight: 500, flex: 1, minWidth: 180 },
-  input: { padding: '0.55rem 0.75rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: '0.9rem' },
-  sectionLabel: { margin: '0 0 0.5rem', fontSize: '0.875rem', fontWeight: 600, color: '#374151' },
-  summary: { background: '#f0fdf4', padding: '0.75rem 1rem', borderRadius: 6, fontSize: '0.9rem', color: '#166534' },
-  actions: { display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' },
-  btnPrimary: { padding: '0.6rem 1.2rem', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' },
-  btnSecondary: { padding: '0.6rem 1.2rem', background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' },
-  error: { margin: 0, color: '#dc2626', fontSize: '0.85rem' },
-};

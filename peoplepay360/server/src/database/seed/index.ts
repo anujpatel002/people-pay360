@@ -51,6 +51,19 @@ const IDS = {
     jan2026: 'h0000000-0000-0000-0000-000000000001',
     feb2026: 'h0000000-0000-0000-0000-000000000002',
   },
+  companies: {
+    primary:   '6ead8c86-a96e-11f1-b2f6-3a217fae9be6',
+    technova:  '7fa91b97-b07f-11f1-c3a7-4b328abf0cf7',
+    acmeGlobal:'8ab02c08-c180-11f1-d4b8-5c439bcf1da8',
+  },
+  departments: {
+    engineering: '20000000-0000-0000-0000-000000000001',
+    hr:          '20000000-0000-0000-0000-000000000002',
+    finance:     '20000000-0000-0000-0000-000000000003',
+    sales:       '20000000-0000-0000-0000-000000000004',
+    operations:  '20000000-0000-0000-0000-000000000005',
+    design:      '20000000-0000-0000-0000-000000000006',
+  },
 };
 
 async function seed() {
@@ -59,6 +72,37 @@ async function seed() {
     await conn.beginTransaction();
 
     console.log('Seeding database tables...');
+
+    // 0. Companies & Departments
+    const companies = [
+      { id: IDS.companies.primary, code: 'PEOPLEPAY360', name: 'PeoplePay360 Inc.', currency: 'INR' },
+      { id: IDS.companies.technova, code: 'TECHNOVA', name: 'TechNova Solutions Ltd.', currency: 'USD' },
+      { id: IDS.companies.acmeGlobal, code: 'ACME_GLOBAL', name: 'Acme Global Enterprises', currency: 'EUR' },
+    ];
+    for (const c of companies) {
+      await conn.execute(`
+        INSERT INTO companies (id, code, name, currency_code, is_active)
+        VALUES (?, ?, ?, ?, 1)
+        ON DUPLICATE KEY UPDATE name = VALUES(name), currency_code = VALUES(currency_code), is_active = 1
+      `, [c.id, c.code, c.name, c.currency]);
+    }
+
+    const departments = [
+      { id: IDS.departments.engineering, companyId: IDS.companies.primary, code: 'ENG', name: 'Engineering' },
+      { id: IDS.departments.hr, companyId: IDS.companies.primary, code: 'HR', name: 'Human Resources' },
+      { id: IDS.departments.finance, companyId: IDS.companies.primary, code: 'FIN', name: 'Finance & Payroll' },
+      { id: IDS.departments.sales, companyId: IDS.companies.primary, code: 'SALES', name: 'Sales' },
+      { id: IDS.departments.operations, companyId: IDS.companies.primary, code: 'OPS', name: 'Operations' },
+      { id: IDS.departments.design, companyId: IDS.companies.primary, code: 'DESIGN', name: 'Product Design' },
+    ];
+    for (const d of departments) {
+      await conn.execute(`
+        INSERT INTO departments (id, company_id, code, name, is_active)
+        VALUES (?, ?, ?, ?, 1)
+        ON DUPLICATE KEY UPDATE name = VALUES(name), company_id = VALUES(company_id), is_active = 1
+      `, [d.id, d.companyId, d.code, d.name]);
+    }
+    console.log('  ✓ Companies and departments seeded');
 
     // 1. Working schedules
     const schedules = [
@@ -216,6 +260,8 @@ async function seed() {
         phone: '+1-555-0101',
         jobTitle: 'System Administrator',
         type: 'full_time',
+        companyId: IDS.companies.primary,
+        departmentId: IDS.departments.hr,
         managerId: null,
         hireDate: '2023-01-01',
         location: 'New York, USA',
@@ -229,6 +275,8 @@ async function seed() {
         phone: '+1-555-0102',
         jobTitle: 'HR Director',
         type: 'full_time',
+        companyId: IDS.companies.primary,
+        departmentId: IDS.departments.hr,
         managerId: IDS.emp.admin,
         hireDate: '2023-01-15',
         location: 'New York, USA',
@@ -242,6 +290,8 @@ async function seed() {
         phone: '+1-555-0103',
         jobTitle: 'Payroll Lead',
         type: 'full_time',
+        companyId: IDS.companies.primary,
+        departmentId: IDS.departments.finance,
         managerId: IDS.emp.hrManager,
         hireDate: '2023-02-01',
         location: 'Chicago, USA',
@@ -255,6 +305,8 @@ async function seed() {
         phone: '+1-555-0104',
         jobTitle: 'Payroll Specialist',
         type: 'full_time',
+        companyId: IDS.companies.primary,
+        departmentId: IDS.departments.finance,
         managerId: IDS.emp.hrPayrollMgr,
         hireDate: '2023-03-01',
         location: 'Chicago, USA',
@@ -268,6 +320,8 @@ async function seed() {
         phone: '+1-555-0105',
         jobTitle: 'Senior Software Engineer',
         type: 'full_time',
+        companyId: IDS.companies.primary,
+        departmentId: IDS.departments.engineering,
         managerId: IDS.emp.admin,
         hireDate: '2023-04-01',
         location: 'San Francisco, USA',
@@ -281,6 +335,8 @@ async function seed() {
         phone: '+1-555-0106',
         jobTitle: 'Frontend Developer',
         type: 'full_time',
+        companyId: IDS.companies.primary,
+        departmentId: IDS.departments.engineering,
         managerId: IDS.emp.devLead,
         hireDate: '2023-05-15',
         location: 'San Francisco, USA',
@@ -294,6 +350,8 @@ async function seed() {
         phone: '+1-555-0107',
         jobTitle: 'QA Engineer',
         type: 'full_time',
+        companyId: IDS.companies.primary,
+        departmentId: IDS.departments.engineering,
         managerId: IDS.emp.devLead,
         hireDate: '2023-06-01',
         location: 'Austin, USA',
@@ -307,6 +365,8 @@ async function seed() {
         phone: '+1-555-0108',
         jobTitle: 'UI/UX Designer',
         type: 'full_time',
+        companyId: IDS.companies.primary,
+        departmentId: IDS.departments.design,
         managerId: IDS.emp.hrManager,
         hireDate: '2023-07-01',
         location: 'Austin, USA',
@@ -317,8 +377,8 @@ async function seed() {
       await conn.execute(`
         INSERT INTO employees
           (id, employee_number, first_name, last_name, work_email, phone, job_title,
-           employment_type, schedule_id, hire_date, location, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+           employment_type, company_id, department_id, schedule_id, hire_date, location, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
         ON DUPLICATE KEY UPDATE
           employee_number = VALUES(employee_number),
           first_name = VALUES(first_name),
@@ -326,11 +386,13 @@ async function seed() {
           phone = VALUES(phone),
           job_title = VALUES(job_title),
           employment_type = VALUES(employment_type),
+          company_id = VALUES(company_id),
+          department_id = VALUES(department_id),
           schedule_id = VALUES(schedule_id),
           hire_date = VALUES(hire_date),
           location = VALUES(location),
           status = 'active'
-      `, [e.id, e.number, e.firstName, e.lastName, e.email, e.phone, e.jobTitle, e.type, IDS.schedules.standard40h, e.hireDate, e.location]);
+      `, [e.id, e.number, e.firstName, e.lastName, e.email, e.phone, e.jobTitle, e.type, e.companyId, e.departmentId, IDS.schedules.standard40h, e.hireDate, e.location]);
     }
 
     // Update managers now that all employees exist
@@ -384,10 +446,11 @@ async function seed() {
 
     for (const c of contracts) {
       await conn.execute(`
-        INSERT INTO contracts (id, employee_id, contract_ref, status, department, job_position, wage, start_date, schedule_id, structure_id)
-        VALUES (?, ?, ?, 'Running', ?, ?, ?, ?, ?, ?)
+        INSERT INTO contracts (id, employee_id, company_id, contract_ref, status, department, job_position, wage, start_date, schedule_id, structure_id)
+        VALUES (?, ?, ?, ?, 'Running', ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           contract_ref = VALUES(contract_ref),
+          company_id = VALUES(company_id),
           status = 'Running',
           department = VALUES(department),
           job_position = VALUES(job_position),
@@ -395,7 +458,7 @@ async function seed() {
           start_date = VALUES(start_date),
           schedule_id = VALUES(schedule_id),
           structure_id = VALUES(structure_id)
-      `, [c.id, c.empId, c.ref, c.dept, c.pos, c.wage, c.start, IDS.schedules.standard40h, c.structureId]);
+      `, [c.id, c.empId, IDS.companies.primary, c.ref, c.dept, c.pos, c.wage, c.start, IDS.schedules.standard40h, c.structureId]);
 
       // Link current contract to employee
       await conn.execute(`UPDATE employees SET current_contract_id = ? WHERE id = ?`, [c.id, c.empId]);
@@ -532,9 +595,10 @@ async function seed() {
     for (const pr of payruns) {
       await conn.execute(`
         INSERT INTO payruns
-          (id, name, period_start, period_end, structure_id, status, total_gross, total_net, warning_count, paid_at, paid_by)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (id, company_id, name, period_start, period_end, structure_id, status, total_gross, total_net, warning_count, paid_at, paid_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
+          company_id = VALUES(company_id),
           name = VALUES(name),
           period_start = VALUES(period_start),
           period_end = VALUES(period_end),
@@ -545,7 +609,7 @@ async function seed() {
           warning_count = VALUES(warning_count),
           paid_at = VALUES(paid_at),
           paid_by = VALUES(paid_by)
-      `, [pr.id, pr.name, pr.periodStart, pr.periodEnd, pr.structureId, pr.status, pr.totalGross, pr.totalNet, pr.warningCount, pr.paidAt, pr.paidBy]);
+      `, [pr.id, IDS.companies.primary, pr.name, pr.periodStart, pr.periodEnd, pr.structureId, pr.status, pr.totalGross, pr.totalNet, pr.warningCount, pr.paidAt, pr.paidBy]);
     }
     console.log('  ✓ Payruns seeded');
 

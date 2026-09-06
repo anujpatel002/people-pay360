@@ -1,4 +1,4 @@
-import React, { useState, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { Attendance, CorrectionPayload } from '../types/attendance.types';
 
 interface Props {
@@ -32,7 +32,7 @@ export default function AttendanceCorrectionDialog({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!reason.trim()) {
-      setError('Correction reason is mandatory.');
+      setError('Correction justification reason is mandatory.');
       return;
     }
 
@@ -52,74 +52,122 @@ export default function AttendanceCorrectionDialog({
       });
       onClose();
     } catch (err: unknown) {
-      setError((err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Failed to apply correction');
+      setError(
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+          'Failed to apply correction'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
-        <div style={styles.header}>
-          <h3 style={styles.title}>Correct Attendance Record</h3>
-          <button style={styles.closeBtn} onClick={onClose}>✕</button>
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.6)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        padding: '16px',
+      }}
+    >
+      <div
+        className="app-card"
+        style={{
+          maxWidth: '520px',
+          width: '100%',
+          padding: '24px',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#0f172a' }}>
+            Correct Attendance Record
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', fontSize: '18px', color: '#94a3b8', cursor: 'pointer' }}
+          >
+            ✕
+          </button>
         </div>
 
-        <p style={styles.subtitle}>
-          Employee: <strong>{record.employeeName ?? record.employeeId}</strong> ({record.date})
+        <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#64748b' }}>
+          Modifying record for <strong>{record.employeeName ?? record.employeeId}</strong> on{' '}
+          <strong>{record.date}</strong>
         </p>
 
-        {error && <p style={styles.error}>{error}</p>}
+        {error && (
+          <div
+            style={{
+              padding: '10px 14px',
+              borderRadius: '8px',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#991b1b',
+              fontSize: '13px',
+              marginBottom: '16px',
+            }}
+          >
+            {error}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <label style={styles.label}>
-            Corrected Check-In *
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="app-form-group">
+            <label className="app-label">Corrected Check-In Timestamp *</label>
             <input
               type="datetime-local"
+              className="app-input"
               value={checkIn}
               onChange={(e) => setCheckIn(e.target.value)}
               required
-              style={styles.input}
             />
-          </label>
+          </div>
 
-          <label style={styles.label}>
-            Corrected Check-Out
+          <div className="app-form-group">
+            <label className="app-label">Corrected Check-Out Timestamp</label>
             <input
               type="datetime-local"
+              className="app-input"
               value={checkOut}
               onChange={(e) => setCheckOut(e.target.value)}
-              style={styles.input}
             />
-          </label>
+          </div>
 
-          <label style={styles.label}>
-            Correction Reason *
+          <div className="app-form-group">
+            <label className="app-label">Correction Justification Reason *</label>
             <textarea
-              placeholder="Provide justification for manual modification (e.g. system clock error, badge forgotten)"
+              className="app-input"
+              placeholder="e.g. Employee forgot to clock out due to overtime meeting; approved by supervisor."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               required
-              style={{ ...styles.input, height: 75, resize: 'vertical' }}
+              rows={3}
+              style={{ resize: 'vertical' }}
             />
-          </label>
+          </div>
 
-          <div style={styles.actions}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
             <button
               type="button"
               onClick={onClose}
-              style={styles.cancelBtn}
+              className="app-btn app-btn-secondary"
               disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              style={styles.saveBtn}
+              className="app-btn app-btn-primary"
               disabled={loading}
             >
-              {loading ? 'Saving…' : 'Save Correction'}
+              {loading ? 'Saving Correction...' : 'Save Correction'}
             </button>
           </div>
         </form>
@@ -127,101 +175,3 @@ export default function AttendanceCorrectionDialog({
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 9999,
-    padding: '1rem',
-  },
-  modal: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    maxWidth: 500,
-    width: '100%',
-    padding: '1.5rem',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '0.5rem',
-  },
-  title: {
-    margin: 0,
-    fontSize: '1.15rem',
-    fontWeight: 700,
-    color: '#0f172a',
-  },
-  closeBtn: {
-    background: 'transparent',
-    border: 'none',
-    fontSize: '1.25rem',
-    cursor: 'pointer',
-    color: '#94a3b8',
-  },
-  subtitle: {
-    fontSize: '0.85rem',
-    color: '#64748b',
-    margin: '0 0 1rem',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.85rem',
-  },
-  label: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.3rem',
-    fontSize: '0.85rem',
-    fontWeight: 600,
-    color: '#334155',
-  },
-  input: {
-    padding: '0.5rem 0.75rem',
-    borderRadius: 6,
-    border: '1px solid #cbd5e1',
-    fontSize: '0.875rem',
-  },
-  actions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '0.75rem',
-    marginTop: '0.5rem',
-  },
-  cancelBtn: {
-    padding: '0.55rem 1.25rem',
-    background: '#f1f5f9',
-    border: '1px solid #e2e8f0',
-    borderRadius: 6,
-    cursor: 'pointer',
-    fontWeight: 500,
-  },
-  saveBtn: {
-    padding: '0.55rem 1.25rem',
-    background: '#4f46e5',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: 6,
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  error: {
-    color: '#dc2626',
-    fontSize: '0.8rem',
-    background: '#fee2e2',
-    padding: '0.5rem 0.75rem',
-    borderRadius: 6,
-    marginBottom: '0.5rem',
-  },
-};

@@ -91,9 +91,10 @@ export async function findAllocations(filters: {
   const where  = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const offset = (Math.max(page, 1) - 1) * limit;
 
-  const [[{ total }]] = await pool.execute<(RowDataPacket & { total: number })[]>(
+  const [countRows] = await pool.execute<RowDataPacket[]>(
     `SELECT COUNT(*) AS total FROM time_off_allocations a ${where}`, params as any[]
   );
+  const total = Number((countRows[0] as any)?.total ?? 0);
   const [rows] = await pool.execute<AllocationRow[]>(
     `${ALLOC_SELECT} ${where} ORDER BY a.year DESC, employee_name ASC LIMIT ? OFFSET ?`,
     [...params, limit, offset] as any[]
@@ -156,11 +157,11 @@ export async function updateAllocation(id: string, data: Record<string, unknown>
 
 const REQ_SELECT = `
   SELECT r.*,
-    CONCAT(e.first_name, ' ', e.last_name) AS employee_name,
-    t.name AS type_name
+    COALESCE(NULLIF(TRIM(CONCAT(e.first_name, ' ', e.last_name)), ''), r.employee_id, 'Employee') AS employee_name,
+    COALESCE(t.name, 'Leave') AS type_name
   FROM time_off_requests r
-  JOIN employees e ON e.id = r.employee_id
-  JOIN time_off_types t ON t.id = r.type_id
+  LEFT JOIN employees e ON e.id = r.employee_id
+  LEFT JOIN time_off_types t ON t.id = r.type_id
 `;
 
 export async function findRequests(filters: {
@@ -180,11 +181,12 @@ export async function findRequests(filters: {
   const where  = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const offset = (Math.max(page, 1) - 1) * limit;
 
-  const [[{ total }]] = await pool.execute<(RowDataPacket & { total: number })[]>(
+  const [countRows] = await pool.execute<RowDataPacket[]>(
     `SELECT COUNT(*) AS total FROM time_off_requests r ${where}`, params as any[]
   );
+  const total = Number((countRows[0] as any)?.total ?? 0);
   const [rows] = await pool.execute<TimeOffRequestRow[]>(
-    `${REQ_SELECT} ${where} ORDER BY r.start_date DESC LIMIT ? OFFSET ?`,
+    `${REQ_SELECT} ${where} ORDER BY r.created_at DESC, r.start_date DESC LIMIT ? OFFSET ?`,
     [...params, limit, offset] as any[]
   );
   return { data: rows.map(toTimeOffRequest), total, page, limit };

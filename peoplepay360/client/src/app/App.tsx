@@ -3,6 +3,7 @@ import { Provider, useDispatch } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { store } from './store';
 import AppRouter from './routes/AppRouter';
+import '@/styles/app.css';
 import { refreshToken } from '@/features/auth/services/auth.service';
 import { markInitialized, setCredentials } from '@/features/auth/store/auth.slice';
 import { AppDispatch } from './store';

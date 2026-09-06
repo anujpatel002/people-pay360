@@ -15,12 +15,17 @@ export interface EmployeeRow extends RowDataPacket {
   avatar_url: string | null;         // TEXT
   job_title: string | null;
   job_position_id: string | null;
+  job_position_name?: string | null;
   department_id: string | null;
+  department_name?: string | null;
   manager_id: string | null;
+  manager_name?: string | null;
   employment_type: string;
   company_id: string | null;
+  company_name?: string | null;
   location: string | null;
   schedule_id: string | null;
+  schedule_name?: string | null;
   hire_date: string | Date;
   current_contract_id: string | null;
   bank_account: string | null;
@@ -49,12 +54,17 @@ export function toEmployee(row: EmployeeRow): Employee {
     avatarUrl:            row.avatar_url ?? undefined,
     jobTitle:             row.job_title ?? undefined,
     jobPositionId:        row.job_position_id ?? undefined,
+    jobPositionName:      row.job_position_name ?? undefined,
     departmentId:         row.department_id ?? undefined,
+    departmentName:       row.department_name ?? undefined,
     managerId:            row.manager_id ?? undefined,
+    managerName:          row.manager_name ?? undefined,
     employmentType:       row.employment_type as Employee['employmentType'],
     companyId:            row.company_id ?? undefined,
+    companyName:          row.company_name ?? undefined,
     location:             row.location ?? undefined,
     scheduleId:           row.schedule_id ?? undefined,
+    scheduleName:         row.schedule_name ?? undefined,
     hireDate:             toDateOnly(row.hire_date),
     currentContractId:    row.current_contract_id ?? undefined,
     bankAccount:          row.bank_account ?? undefined,

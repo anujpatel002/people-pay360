@@ -39,7 +39,7 @@ export async function getAttendanceOverview(filters: DashboardFilters): Promise<
   }
   const where = `WHERE ${conditions.join(' AND ')}`;
 
-  const [[stats]] = await pool.execute<(RowDataPacket & {
+  const [rows] = await pool.execute<(RowDataPacket & {
     present: number; late: number; absent: number; overtime: number;
     missing_check_outs: number; manual_edits: number;
     expected_employee_days: number; present_employee_days: number;
@@ -58,6 +58,7 @@ export async function getAttendanceOverview(filters: DashboardFilters): Promise<
     ${where}
   `, params as any[]);
 
+  const stats = rows[0];
   const expectedDays = Number(stats?.expected_employee_days ?? 0);
   const presentDays = Number(stats?.present_employee_days ?? 0);
   const coveragePercent = expectedDays > 0

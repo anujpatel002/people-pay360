@@ -1,12 +1,14 @@
 import React from 'react';
 import { useCheckInOut } from '../hooks/useCheckInOut';
 import AttendanceStatusBadge from './AttendanceStatusBadge';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 
 interface Props {
   onStatusChange?: () => void;
 }
 
 export default function CheckInWidget({ onStatusChange }: Props) {
+  const { role, user } = useCurrentUser();
   const {
     openSession,
     loading,
@@ -17,10 +19,60 @@ export default function CheckInWidget({ onStatusChange }: Props) {
     handleCheckOut,
   } = useCheckInOut(onStatusChange);
 
+  if (role === 'Admin') {
+    return (
+      <div
+        className="app-card"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '16px 22px',
+          flexWrap: 'wrap',
+          gap: '14px',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+          borderColor: '#e2e8f0',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: '#eff6ff',
+              color: '#2563eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+            }}
+          >
+            🛡️
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <strong style={{ fontSize: '14px', color: '#0f172a' }}>System Administrator Attendance Mode</strong>
+              <span className="app-badge app-badge-info" style={{ fontSize: '11px' }}>Punch-Clock Exempt</span>
+            </div>
+            <p style={{ margin: '2px 0 0', fontSize: '12.5px', color: '#64748b' }}>
+              Logged in as <strong>{user?.name || 'Administrator'}</strong>. Administrative accounts are exempt from daily shift check-in / check-out clocks. Use this portal for organization-wide monitoring, anomaly reviews, and corrections.
+            </p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="app-badge app-badge-success" style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 600 }}>
+            ● Full Oversight Access
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div style={styles.card}>
-        <span style={styles.muted}>Loading attendance widget...</span>
+      <div className="app-card" style={{ padding: '16px 20px', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>
+        Loading attendance punch widget...
       </div>
     );
   }
@@ -28,143 +80,91 @@ export default function CheckInWidget({ onStatusChange }: Props) {
   const isCheckedIn = Boolean(openSession);
 
   return (
-    <div style={styles.card}>
-      <div style={styles.left}>
-        <div style={styles.indicatorContainer}>
+    <div
+      className="app-card"
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px 22px',
+        flexWrap: 'wrap',
+        gap: '14px',
+        background: isCheckedIn
+          ? 'linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%)'
+          : '#ffffff',
+        borderColor: isCheckedIn ? '#a7f3d0' : 'var(--app-card-border)',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span
             style={{
-              ...styles.pulseDot,
-              backgroundColor: isCheckedIn ? '#10b981' : '#9ca3af',
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              backgroundColor: isCheckedIn ? '#10b981' : '#94a3b8',
+              boxShadow: isCheckedIn ? '0 0 10px rgba(16, 185, 129, 0.6)' : 'none',
+              animation: isCheckedIn ? 'dashPulse 2s infinite ease-in-out' : 'none',
             }}
           />
-          <span style={styles.statusLabel}>
+          <span style={{ fontWeight: 800, fontSize: '14px', color: '#0f172a' }}>
             {isCheckedIn ? 'Checked In' : 'Not Checked In'}
           </span>
         </div>
 
         {isCheckedIn && openSession && (
-          <div style={styles.sessionDetails}>
-            <span style={styles.timeInfo}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+            <span style={{ color: '#64748b' }}>
               Since {new Date(openSession.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
-            <span style={styles.timerBadge}>⏱ {formattedElapsed}</span>
+            <span
+              style={{
+                fontFamily: 'var(--app-font)',
+                fontWeight: 800,
+                fontSize: '13px',
+                padding: '3px 8px',
+                background: '#e0e7ff',
+                borderRadius: '6px',
+                color: '#4338ca',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              ⏱ {formattedElapsed}
+            </span>
             <AttendanceStatusBadge status={openSession.status} />
           </div>
         )}
       </div>
 
-      <div style={styles.right}>
-        {error && <span style={styles.error}>{error}</span>}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {error && (
+          <span style={{ color: '#dc2626', fontSize: '12.5px', fontWeight: 600 }}>
+            {error}
+          </span>
+        )}
 
         {isCheckedIn ? (
           <button
-            style={styles.checkOutBtn}
+            type="button"
+            className="app-btn app-btn-danger"
             onClick={handleCheckOut}
             disabled={actionLoading}
+            style={{ padding: '8px 18px', fontSize: '13px' }}
           >
-            {actionLoading ? 'Checking Out...' : 'Check Out'}
+            {actionLoading ? 'Checking Out...' : 'Check Out Now'}
           </button>
         ) : (
           <button
-            style={styles.checkInBtn}
+            type="button"
+            className="app-btn"
+            style={{ background: '#059669', color: '#ffffff', border: 'none', padding: '8px 18px', fontSize: '13px' }}
             onClick={handleCheckIn}
             disabled={actionLoading}
           >
-            {actionLoading ? 'Checking In...' : 'Check In'}
+            {actionLoading ? 'Checking In...' : 'Check In Now'}
           </button>
         )}
       </div>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  card: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '1rem 1.25rem',
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: 10,
-    marginBottom: '1.25rem',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
-    flexWrap: 'wrap',
-    gap: '1rem',
-  },
-  left: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1.25rem',
-    flexWrap: 'wrap',
-  },
-  indicatorContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  pulseDot: {
-    width: 10,
-    height: 10,
-    borderRadius: '50%',
-    display: 'inline-block',
-  },
-  statusLabel: {
-    fontWeight: 700,
-    fontSize: '0.95rem',
-    color: '#1e293b',
-  },
-  sessionDetails: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    fontSize: '0.875rem',
-  },
-  timeInfo: {
-    color: '#64748b',
-  },
-  timerBadge: {
-    fontFamily: 'monospace',
-    fontWeight: 700,
-    fontSize: '0.9rem',
-    padding: '0.15rem 0.5rem',
-    background: '#f1f5f9',
-    borderRadius: 5,
-    color: '#0f172a',
-  },
-  right: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-  },
-  checkInBtn: {
-    padding: '0.55rem 1.4rem',
-    background: '#10b981',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: 7,
-    fontWeight: 600,
-    fontSize: '0.875rem',
-    cursor: 'pointer',
-    boxShadow: '0 1px 2px rgba(16, 185, 129, 0.2)',
-  },
-  checkOutBtn: {
-    padding: '0.55rem 1.4rem',
-    background: '#ef4444',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: 7,
-    fontWeight: 600,
-    fontSize: '0.875rem',
-    cursor: 'pointer',
-    boxShadow: '0 1px 2px rgba(239, 68, 68, 0.2)',
-  },
-  muted: {
-    color: '#94a3b8',
-    fontSize: '0.875rem',
-  },
-  error: {
-    color: '#dc2626',
-    fontSize: '0.8rem',
-  },
-};

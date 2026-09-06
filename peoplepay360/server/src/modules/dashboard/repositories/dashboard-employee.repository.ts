@@ -85,7 +85,7 @@ export async function getActiveEmployeeCount(
 
   const where = `WHERE ${conditions.join(' AND ')}`;
 
-  const [[row]] = await pool.execute<
+  const [rows] = await pool.execute<
     (RowDataPacket & { total: number })[]
   >(`
     SELECT COUNT(e.id) AS total
@@ -93,5 +93,5 @@ export async function getActiveEmployeeCount(
     ${where}
   `, params as any[]);
 
-  return Number(row?.total ?? 0);
+  return Number(rows[0]?.total ?? 0);
 }

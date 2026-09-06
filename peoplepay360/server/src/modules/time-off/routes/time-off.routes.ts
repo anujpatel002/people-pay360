@@ -17,13 +17,13 @@ const h = (fn: Function) => fn as unknown as RequestHandler;
 const router = Router();
 router.use(authMiddleware as unknown as RequestHandler);
 
-// Types — full CRUD: HR Manager+
-router.get('/types',      requireRoles(...HR) as unknown as RequestHandler, h(listTypes));
+// Types — Read: All authenticated; Write: HR Manager+
+router.get('/types',      h(listTypes));
 router.post('/types',     requireRoles(...HR) as unknown as RequestHandler, h(createType));
 router.put('/types/:id',  requireRoles(...HR) as unknown as RequestHandler, h(updateType));
 
-// Allocations — HR Manager+
-router.get('/allocations',      requireRoles(...HR) as unknown as RequestHandler, h(listAllocations));
+// Allocations — Read: All authenticated; Write: HR Manager+
+router.get('/allocations',      h(listAllocations));
 router.post('/allocations',     requireRoles(...HM) as unknown as RequestHandler, h(createAllocation));
 router.put('/allocations/:id',  requireRoles(...HM) as unknown as RequestHandler, h(updateAllocation));
 

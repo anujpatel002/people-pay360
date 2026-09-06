@@ -8,6 +8,10 @@ export async function getContracts(filters: ContractFilters): Promise<PaginatedR
   return repo.findAll(filters);
 }
 
+export async function getContractLookups() {
+  return repo.getLookups();
+}
+
 export async function getContract(id: string): Promise<Contract> {
   const contract = await repo.findById(id);
   if (!contract) throw new NotFoundError('Contract not found');

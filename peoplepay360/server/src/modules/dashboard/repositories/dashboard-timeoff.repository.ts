@@ -21,12 +21,12 @@ function buildEmployeeScope(filters: DashboardFilters): { sql: string; params: u
   const params: unknown[] = [];
 
   if (filters.companyId) {
-    conditions.push('(company_id = ? OR (company_id IS NULL AND company_id = ?))');
-    params.push(filters.companyId, filters.companyId);
+    conditions.push('company_id = ?');
+    params.push(filters.companyId);
   }
   if (filters.departmentId) {
-    conditions.push('(department_id = ? OR (department_id IS NULL AND department_id = ?))');
-    params.push(filters.departmentId, filters.departmentId);
+    conditions.push('department_id = ?');
+    params.push(filters.departmentId);
   }
   if (filters.employmentType) {
     conditions.push('employment_type = ?');
@@ -54,12 +54,13 @@ export async function getApprovedTimeOffDays(filters: DashboardFilters): Promise
   }
 
   const where = `WHERE ${conditions.join(' AND ')}`;
-  const [[row]] = await pool.execute<(RowDataPacket & { total_days: number })[]>(`
+  const [rows] = await pool.execute<(RowDataPacket & { total_days: number })[]>(`
     SELECT COALESCE(SUM(days), 0) AS total_days
     FROM time_off_requests
     ${where}
   `, params as any[]);
 
+  const row = rows[0];
   return Number(row?.total_days ?? 0);
 }
 
@@ -82,13 +83,13 @@ export async function getTimeOffOverview(filters: DashboardFilters): Promise<Tim
     pendingParams.push(range.end, range.start);
   }
 
-  const [[pendingRow]] = await pool.execute<(RowDataPacket & { pending_count: number })[]>(`
+  const [pendingRows] = await pool.execute<(RowDataPacket & { pending_count: number })[]>(`
     SELECT COUNT(id) AS pending_count
     FROM time_off_requests
     WHERE ${pendingConditions.join(' AND ')}
   `, pendingParams as any[]);
 
-  const pendingRequests = Number(pendingRow?.pending_count ?? 0);
+  const pendingRequests = Number(pendingRows[0]?.pending_count ?? 0);
 
   // 3. Leave Balances by Type
   const currentYear = range ? Number(filters.period!.split('-')[0]) : new Date().getFullYear();
@@ -115,7 +116,7 @@ export async function getTimeOffOverview(filters: DashboardFilters): Promise<Tim
       });
     } else {
       const allocParams = [t.id, currentYear, ...empScope.params];
-      const [[allocRow]] = await pool.execute<(RowDataPacket & { remaining: number | null })[]>(`
+      const [allocRows] = await pool.execute<(RowDataPacket & { remaining: number | null })[]>(`
         SELECT SUM(total_days - used_days) AS remaining
         FROM time_off_allocations
         WHERE type_id = ?
@@ -124,6 +125,7 @@ export async function getTimeOffOverview(filters: DashboardFilters): Promise<Tim
           AND employee_id IN (${empScope.sql})
       `, allocParams as any[]);
 
+      const allocRow = allocRows[0];
       balancesByType.push({
         typeId: t.id,
         typeName: t.name,

@@ -6,8 +6,13 @@ import { PaginatedResult } from '../../../shared/types';
 
 function toMysqlDatetime(d: Date | string | null | undefined): string | null {
   if (!d) return null;
-  const date = typeof d === 'string' ? new Date(d) : d;
-  return date.toISOString().slice(0, 19).replace('T', ' ');
+  try {
+    const date = typeof d === 'string' ? new Date(d) : d;
+    if (isNaN(date.getTime())) return null;
+    return date.toISOString().slice(0, 19).replace('T', ' ');
+  } catch {
+    return null;
+  }
 }
 
 const BASE_SELECT = `
@@ -69,18 +74,21 @@ export async function findAll(filters: AttendanceFilters): Promise<PaginatedResu
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  const [[{ total }]] = await pool.execute<(RowDataPacket & { total: number })[]>(
+  const [countRows] = await pool.execute<RowDataPacket[]>(
     `SELECT COUNT(*) AS total
      FROM attendance_records a
      JOIN employees e ON e.id = a.employee_id
      ${where}`,
     params as any[]
   );
+  const total = Number((countRows[0] as any)?.total ?? 0);
 
   const sortColumnMap: Record<string, string> = {
     date: 'a.date',
     checkIn: 'a.check_in',
     workedMinutes: 'a.worked_minutes',
+    overtimeMinutes: 'a.overtime_minutes',
+    employeeName: 'employee_name',
     status: 'a.status',
   };
   const sortCol = sortColumnMap[sortBy] ?? 'a.date';

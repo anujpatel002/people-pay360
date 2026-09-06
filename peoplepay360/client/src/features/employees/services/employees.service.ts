@@ -1,6 +1,6 @@
 import httpClient from '@/shared/services/httpClient';
 import { PaginatedResult } from '@/shared/types/api.types';
-import { Employee, EmployeeFilters, EmployeeFormValues, SmartCounts } from '../types/employee.types';
+import { Employee, EmployeeFilters, EmployeeFormValues, SmartCounts, EmployeeLookups } from '../types/employee.types';
 
 export async function getEmployees(filters: EmployeeFilters = {}): Promise<PaginatedResult<Employee>> {
   const { data } = await httpClient.get<PaginatedResult<Employee>>('/employees', { params: filters });
@@ -9,6 +9,11 @@ export async function getEmployees(filters: EmployeeFilters = {}): Promise<Pagin
 
 export async function getEmployee(id: string): Promise<Employee> {
   const { data } = await httpClient.get<Employee>(`/employees/${id}`);
+  return data;
+}
+
+export async function getEmployeeLookups(): Promise<EmployeeLookups> {
+  const { data } = await httpClient.get<EmployeeLookups>('/employees/lookups');
   return data;
 }
 

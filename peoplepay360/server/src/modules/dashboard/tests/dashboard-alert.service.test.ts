@@ -48,7 +48,7 @@ describe('dashboard-alert.service', () => {
     expect(summaries).toHaveLength(1);
     expect(alertRepo.upsertAlert).toHaveBeenCalledTimes(3); // 1 bank + 1 payrun + 1 contract
     expect(alertRepo.autoResolveClearedAlerts).toHaveBeenCalledWith(
-      ['MISSING_BANK_DETAILS:cmp_01:emp_01'],
+      ['MISSING_BANK_DETAILS:emp_01'],
       'MISSING_BANK_DETAILS',
       'cmp_01'
     );

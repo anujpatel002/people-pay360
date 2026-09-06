@@ -220,3 +220,60 @@ export async function getCorrections(
   await getAttendanceRecord(user, id);
   return correctionRepo.findByAttendanceId(id);
 }
+
+export interface BulkImportRow {
+  employeeId: string;
+  date: string;      // YYYY-MM-DD
+  checkIn: string;   // HH:MM or full ISO
+  checkOut?: string; // HH:MM or full ISO, optional
+}
+
+export async function bulkImport(
+  user: AuthUser,
+  rows: BulkImportRow[]
+): Promise<{ created: number; failed: number; errors: { row: number; reason: string }[] }> {
+  const errors: { row: number; reason: string }[] = [];
+  let created = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    try {
+      if (!row.employeeId || !row.date || !row.checkIn) {
+        errors.push({ row: i + 1, reason: 'Missing required fields: employeeId, date, checkIn' });
+        continue;
+      }
+
+      // Build full ISO timestamps
+      const checkInFull = row.checkIn.includes('T') ? row.checkIn : `${row.date}T${row.checkIn}:00`;
+      const checkOutFull = row.checkOut
+        ? (row.checkOut.includes('T') ? row.checkOut : `${row.date}T${row.checkOut}:00`)
+        : null;
+
+      const schedule = await resolveScheduleForEmployee(row.employeeId, row.date);
+      const calculation = await calculateWorkedHours(checkInFull, checkOutFull, schedule);
+      const status = detectAttendanceStatus(calculation, schedule, checkInFull);
+
+      await attendanceRepo.create({
+        employeeId: row.employeeId,
+        scheduleId: schedule?.id ?? null,
+        date: row.date,
+        checkIn: checkInFull,
+        checkOut: checkOutFull,
+        workedMinutes: calculation.workedMinutes,
+        overtimeMinutes: calculation.overtimeMinutes,
+        scheduledMinutes: calculation.scheduledMinutes ?? null,
+        breakMinutes: calculation.breakMinutes ?? 0,
+        status,
+        isManualEntry: true,
+        correctionReason: `Bulk import by ${user.email || user.id}`,
+        correctedBy: user.id,
+        correctedAt: new Date().toISOString(),
+      });
+      created++;
+    } catch (err: any) {
+      errors.push({ row: i + 1, reason: err?.message ?? 'Unknown error' });
+    }
+  }
+
+  return { created, failed: errors.length, errors };
+}

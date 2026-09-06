@@ -5,6 +5,15 @@ interface SalaryByDeptChartProps {
   data: SalaryByDepartment[];
 }
 
+const barGradients = [
+  'linear-gradient(90deg, #4f46e5 0%, #6366f1 100%)',
+  'linear-gradient(90deg, #0284c7 0%, #38bdf8 100%)',
+  'linear-gradient(90deg, #059669 0%, #34d399 100%)',
+  'linear-gradient(90deg, #7c3aed 0%, #a78bfa 100%)',
+  'linear-gradient(90deg, #d97706 0%, #fbbf24 100%)',
+  'linear-gradient(90deg, #e11d48 0%, #fb7185 100%)',
+];
+
 export const SalaryByDeptChart: React.FC<SalaryByDeptChartProps> = ({ data }) => {
   const maxSalary = Math.max(...data.map((d) => d.totalNet), 1);
   const totalPayroll = data.reduce((acc, curr) => acc + curr.totalNet, 0);
@@ -18,93 +27,147 @@ export const SalaryByDeptChart: React.FC<SalaryByDeptChartProps> = ({ data }) =>
   };
 
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        borderRadius: '16px',
-        padding: '24px',
-        boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-        border: '1px solid #e2e8f0',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-      }}
-    >
+    <div className="dash-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>
-            Salary Cost by Department
-          </h3>
-          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>
-            Total net distribution across organization units
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>
+              Salary Cost by Department
+            </h3>
+          </div>
+          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--dash-text-muted)' }}>
+            Net compensation distribution across business units
           </p>
         </div>
-        <span
+
+        <div
           style={{
             fontSize: '13px',
-            fontWeight: 600,
-            background: '#f1f5f9',
-            padding: '4px 10px',
-            borderRadius: '8px',
-            color: '#334155',
+            fontWeight: 700,
+            background: 'var(--dash-primary-light)',
+            color: 'var(--dash-primary)',
+            padding: '5px 12px',
+            borderRadius: '10px',
+            border: '1px solid var(--dash-primary-border)',
+            fontVariantNumeric: 'tabular-nums',
           }}
         >
           {formatCurrency(totalPayroll)} total
-        </span>
+        </div>
       </div>
 
+      {/* Content */}
       {data.length === 0 ? (
-        <div style={{ padding: '32px 0', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
-          No payroll data found for the selected filters.
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '36px 16px',
+            color: 'var(--dash-text-subtle)',
+            fontSize: '13.5px',
+          }}
+        >
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginBottom: '10px', opacity: 0.7 }}>
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M3 9h18M9 21V9" />
+          </svg>
+          No payroll records in selected scope
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
+        <div className="dash-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1, overflowY: 'auto' }}>
           {data.map((item, idx) => {
-            const pct = Math.round((item.totalNet / maxSalary) * 100);
-            const totalPct = totalPayroll > 0 ? ((item.totalNet / totalPayroll) * 100).toFixed(1) : '0';
+            const pctOfMax = Math.max(8, Math.round((item.totalNet / maxSalary) * 100));
+            const pctOfTotal = totalPayroll > 0 ? ((item.totalNet / totalPayroll) * 100).toFixed(1) : '0';
+            const gradient = barGradients[idx % barGradients.length];
 
             return (
-              <div key={item.departmentId || `unassigned-${idx}`} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
+              <div
+                key={item.departmentId || `dept-${idx}`}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  padding: '8px 10px',
+                  borderRadius: '10px',
+                  transition: 'background-color 0.15s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+              >
+                {/* Department Info & Numbers */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13.5px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: 600, color: '#1e293b' }}>
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        color: '#64748b',
+                        width: '20px',
+                        textAlign: 'center',
+                      }}
+                    >
+                      #{idx + 1}
+                    </span>
+                    <span style={{ fontWeight: 700, color: '#1e293b' }}>
                       {item.department || 'Unassigned'}
                     </span>
                     <span
                       style={{
                         fontSize: '11px',
-                        background: '#e0e7ff',
-                        color: '#4338ca',
-                        padding: '2px 6px',
+                        fontWeight: 700,
+                        background: '#f1f5f9',
+                        color: '#475569',
+                        padding: '2px 7px',
                         borderRadius: '6px',
-                        fontWeight: 600,
+                        border: '1px solid #e2e8f0',
                       }}
                     >
                       {item.headcount} {item.headcount === 1 ? 'member' : 'members'}
                     </span>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontWeight: 700, color: '#0f172a' }}>{formatCurrency(item.totalNet)}</span>
-                    <span style={{ fontSize: '12px', color: '#64748b', marginLeft: '6px' }}>({totalPct}%)</span>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontWeight: 800, color: '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
+                      {formatCurrency(item.totalNet)}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '11.5px',
+                        fontWeight: 600,
+                        color: 'var(--dash-text-muted)',
+                        background: '#f8fafc',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      {pctOfTotal}%
+                    </span>
                   </div>
                 </div>
 
+                {/* Gradient Progress Bar */}
                 <div
                   style={{
                     width: '100%',
-                    height: '10px',
+                    height: '8px',
                     background: '#f1f5f9',
-                    borderRadius: '6px',
+                    borderRadius: '9999px',
                     overflow: 'hidden',
+                    position: 'relative',
                   }}
                 >
                   <div
                     style={{
-                      width: `${pct}%`,
+                      width: `${pctOfMax}%`,
                       height: '100%',
-                      background: 'linear-gradient(90deg, #6366f1 0%, #4338ca 100%)',
-                      borderRadius: '6px',
-                      transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                      background: gradient,
+                      borderRadius: '9999px',
+                      transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                     }}
                   />
                 </div>
@@ -116,4 +179,5 @@ export const SalaryByDeptChart: React.FC<SalaryByDeptChartProps> = ({ data }) =>
     </div>
   );
 };
+
 export default SalaryByDeptChart;
