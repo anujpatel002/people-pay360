@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAllocations, useTimeOffTypes } from '../hooks/useTimeOff';
 import { getContractLookups } from '@/features/contracts/services/contracts.service';
-import { EmployeeLookup } from '@/features/contracts/types/contract.types';
+import { EmployeeLookups } from '@/features/employees/types/employee.types';
+
+type EmployeeLookup = EmployeeLookups['managers'][number];
 
 export default function AllocationListPage() {
   const navigate = useNavigate();
@@ -369,17 +371,6 @@ export default function AllocationListPage() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
-              <div className="app-form-group">
-                <label className="app-label">Employee ID / Code *</label>
-                <input
-                  className="app-input"
-                  placeholder="e.g. EMP-10151 or UUID"
-                  value={form.employeeId ?? ''}
-                  onChange={(e) => setForm((p) => ({ ...p, employeeId: e.target.value }))}
-                  required
-                />
-              </div>
-
               <div className="app-form-group">
                 <label className="app-label">Leave Type *</label>
                 <select

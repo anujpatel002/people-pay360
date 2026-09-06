@@ -97,6 +97,17 @@ export async function createRequest(
   const type = await repo.findTypeById(input.typeId);
   if (!type) throw new NotFoundError('Time off type not found');
 
+  const overlapping = await repo.findOverlappingRequests(
+    employeeId,
+    input.startDate,
+    input.endDate
+  );
+  if (overlapping.length > 0) {
+    throw new ValidationError(
+      `A time off request already exists for an overlapping date: ${overlapping[0].startDate}`
+    );
+  }
+
   let allocationId: string | null = null;
 
   if (type.allocationRequired) {
@@ -129,8 +140,8 @@ export async function approveRequest(id: string): Promise<TimeOffRequest> {
 export async function refuseRequest(id: string, input: RefuseRequestInput): Promise<TimeOffRequest> {
   const req = await repo.findRequestById(id);
   if (!req) throw new NotFoundError('Request not found');
-  if (!['Confirmed', 'Approved'].includes(req.status)) {
-    throw new ValidationError('Only Confirmed or Approved requests can be refused');
+  if (!['Draft', 'Confirmed', 'Approved'].includes(req.status)) {
+    throw new ValidationError('Only Draft, Confirmed, or Approved requests can be refused');
   }
 
   // Restore balance if was already approved

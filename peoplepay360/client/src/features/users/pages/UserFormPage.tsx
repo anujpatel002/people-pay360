@@ -124,15 +124,16 @@ export default function UserFormPage() {
 
         {/* Form Card */}
         <form onSubmit={handleSubmit} className="app-card" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          {!isEdit && employees.length > 0 && (
+          {!isEdit && (
             <div className="app-form-group">
-              <label className="app-label">Select Active Employee Profile (Quick Select)</label>
+              <label className="app-label">Select Active Employee Profile *</label>
               <select
                 className="app-select"
                 value={employeeId}
                 onChange={(e) => handleEmployeeSelect(e.target.value)}
+                required
               >
-                <option value="">-- Choose an employee from database --</option>
+                <option value="">{employees.length ? '-- Choose an employee from database --' : '-- Loading employee roster --'}</option>
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
                     {emp.name || `${emp.firstName || ''} ${emp.lastName || ''}`.trim()} {emp.employeeNumber ? `(${emp.employeeNumber})` : ''} - {emp.jobTitle || 'Staff'}
@@ -180,19 +181,9 @@ export default function UserFormPage() {
                 />
               </div>
 
-              <div className="app-form-group">
-                <label className="app-label">Linked Employee ID or Badge *</label>
-                <input
-                  className="app-input"
-                  placeholder="e.g. EMP001 or employee UUID"
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
-                  required
-                />
-                <span style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px' }}>
-                  Connects this login account to an employee record for self-service attendance & leaves.
-                </span>
-              </div>
+              <span style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px' }}>
+                The selected employee profile is linked to this login account for self-service attendance and leave access.
+              </span>
             </>
           )}
 

@@ -3,9 +3,10 @@ import { DepartmentOverview as DeptData } from '../types/dashboard.types';
 
 interface DepartmentOverviewProps {
   data: DeptData[];
+  canViewPayroll?: boolean;
 }
 
-export const DepartmentOverview: React.FC<DepartmentOverviewProps> = ({ data }) => {
+export const DepartmentOverview: React.FC<DepartmentOverviewProps> = ({ data, canViewPayroll = true }) => {
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -26,7 +27,9 @@ export const DepartmentOverview: React.FC<DepartmentOverviewProps> = ({ data }) 
             Department Overview
           </h3>
           <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--dash-text-muted)' }}>
-            Headcount distribution and monthly payroll commitment by business team
+            {canViewPayroll
+              ? 'Headcount distribution and monthly payroll commitment by business team'
+              : 'Headcount distribution by business team'}
           </p>
         </div>
 
@@ -44,20 +47,26 @@ export const DepartmentOverview: React.FC<DepartmentOverviewProps> = ({ data }) 
           >
             {totalHeadcount} Total Headcount
           </span>
-          <span
-            style={{
-              fontSize: '12px',
-              fontWeight: 700,
-              background: 'var(--dash-primary-light)',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              color: 'var(--dash-primary)',
-              border: '1px solid var(--dash-primary-border)',
-              fontVariantNumeric: 'tabular-nums',
-            }}
-          >
-            {formatCurrency(totalSalary)} Monthly
-          </span>
+          {canViewPayroll ? (
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                background: 'var(--dash-primary-light)',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                color: 'var(--dash-primary)',
+                border: '1px solid var(--dash-primary-border)',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {formatCurrency(totalSalary)} Monthly
+            </span>
+          ) : (
+            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 700 }}>
+              Payroll restricted
+            </span>
+          )}
         </div>
       </div>
 
@@ -80,8 +89,10 @@ export const DepartmentOverview: React.FC<DepartmentOverviewProps> = ({ data }) 
               <tr style={{ borderBottom: '2px solid #f1f5f9', color: '#64748b', fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 <th style={{ padding: '12px 14px', fontWeight: 700 }}>Department</th>
                 <th style={{ padding: '12px 14px', fontWeight: 700 }}>Headcount</th>
-                <th style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700 }}>Monthly Net Salary</th>
-                <th style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700 }}>Avg Net / Employee</th>
+                {canViewPayroll && <>
+                  <th style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700 }}>Monthly Net Salary</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700 }}>Avg Net / Employee</th>
+                </>}
               </tr>
             </thead>
             <tbody>
@@ -138,13 +149,15 @@ export const DepartmentOverview: React.FC<DepartmentOverviewProps> = ({ data }) 
                       </span>
                     </td>
 
-                    <td style={{ padding: '14px', textAlign: 'right', fontWeight: 800, color: '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
-                      {formatCurrency(row.monthlySalary)}
-                    </td>
+                    {canViewPayroll && <>
+                      <td style={{ padding: '14px', textAlign: 'right', fontWeight: 800, color: '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
+                        {formatCurrency(row.monthlySalary)}
+                      </td>
 
-                    <td style={{ padding: '14px', textAlign: 'right', fontWeight: 700, color: '#475569', fontVariantNumeric: 'tabular-nums' }}>
-                      {formatCurrency(avg)}
-                    </td>
+                      <td style={{ padding: '14px', textAlign: 'right', fontWeight: 700, color: '#475569', fontVariantNumeric: 'tabular-nums' }}>
+                        {formatCurrency(avg)}
+                      </td>
+                    </>}
                   </tr>
                 );
               })}

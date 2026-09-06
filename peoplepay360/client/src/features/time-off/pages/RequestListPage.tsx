@@ -6,13 +6,14 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/app/store';
 
 const HR_ROLES = ['HR Manager', 'HR Payroll User', 'HR Payroll Manager', 'Admin'];
+const PAGE_SIZE = 10;
 
 const STATUS_BADGES: Record<string, { className: string; label: string }> = {
   Confirmed: { className: 'app-badge-info', label: 'Confirmed (Pending)' },
   Approved: { className: 'app-badge-success', label: 'Approved' },
   Refused: { className: 'app-badge-danger', label: 'Refused' },
   Cancelled: { className: 'app-badge-neutral', label: 'Cancelled' },
-  Draft: { className: 'app-badge-neutral', label: 'Draft' },
+  Draft: { className: 'app-badge-neutral', label: 'Draft (Pending Approval)' },
 };
 
 export default function RequestListPage() {
@@ -24,16 +25,19 @@ export default function RequestListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
 
   const { data: rawData, total, loading, error, approve, refuse } = useTimeOffRequests({ limit: 100, ...filters });
   const { types } = useTimeOffTypes();
 
-  const handleFilter = (key: string, val: string) =>
+  const handleFilter = (key: string, val: string) => {
+    setPage(1);
     setFilters((f) =>
       val
         ? { ...f, [key]: val }
         : Object.fromEntries(Object.entries(f).filter(([k]) => k !== key))
     );
+  };
 
   // Client-side search & sort on leave requests
   const filteredAndSortedData = [...rawData]
@@ -63,7 +67,11 @@ export default function RequestListPage() {
       return sortOrder === 'asc' ? comp : -comp;
     });
 
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedData.length / PAGE_SIZE));
+  const paginatedData = filteredAndSortedData.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const handleHeaderSort = (field: string) => {
+    setPage(1);
     if (sortBy === field) {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -99,6 +107,7 @@ export default function RequestListPage() {
     setFilters({});
     setSortBy('startDate');
     setSortOrder('desc');
+    setPage(1);
   };
 
   return (
@@ -154,7 +163,10 @@ export default function RequestListPage() {
                 className="app-input"
                 placeholder="Search employee, leave type, reason..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
                 style={{ width: '100%', paddingLeft: '34px', paddingRight: searchTerm ? '30px' : '12px' }}
               />
               <svg
@@ -367,7 +379,7 @@ export default function RequestListPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredAndSortedData.map((r) => (
+                {paginatedData.map((r) => (
                   <tr key={r.id}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -460,6 +472,32 @@ export default function RequestListPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {filteredAndSortedData.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
+            <button
+              type="button"
+              className="app-btn app-btn-secondary"
+              disabled={page === 1}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              style={{ padding: '7px 14px' }}
+            >
+              Previous
+            </button>
+            <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 600 }}>
+              Page {page} of {totalPages} · {filteredAndSortedData.length} requests
+            </span>
+            <button
+              type="button"
+              className="app-btn app-btn-secondary"
+              disabled={page >= totalPages}
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              style={{ padding: '7px 14px' }}
+            >
+              Next
+            </button>
           </div>
         )}
       </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSchedules } from '../hooks/useSchedules';
 import { deleteSchedule } from '../services/working-schedules.service';
@@ -6,12 +6,18 @@ import { deleteSchedule } from '../services/working-schedules.service';
 export default function ScheduleListPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isActive, setIsActive] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const { data: rawData, total, loading, error, refetch } = useSchedules({
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     isActive: isActive === '' ? undefined : isActive === 'true',
   });
 

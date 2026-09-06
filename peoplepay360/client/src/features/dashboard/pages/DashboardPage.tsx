@@ -657,7 +657,7 @@ const HrDashboard: React.FC = () => {
         {data && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <TimeOffOverview data={data.timeOffOverview} />
-            <DepartmentOverview data={data.departmentOverview} />
+            <DepartmentOverview data={data.departmentOverview} canViewPayroll={canViewPayroll} />
           </div>
         )}
 

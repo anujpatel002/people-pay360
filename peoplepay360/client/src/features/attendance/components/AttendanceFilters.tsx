@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { AttendanceFilters, AttendanceStatus } from '../types/attendance.types';
 
 interface Props {
@@ -16,6 +17,20 @@ const STATUSES: AttendanceStatus[] = [
 ];
 
 export default function AttendanceFiltersBar({ filters, onChange, onReset }: Props) {
+  const [searchTerm, setSearchTerm] = useState(filters.search ?? '');
+
+  useEffect(() => {
+    setSearchTerm(filters.search ?? '');
+  }, [filters.search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const nextSearch = searchTerm || undefined;
+      if (nextSearch !== filters.search) onChange({ search: nextSearch });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const hasFilters = Boolean(
     filters.search ||
     filters.status ||
@@ -34,8 +49,8 @@ export default function AttendanceFiltersBar({ filters, onChange, onReset }: Pro
             type="text"
             className="app-input"
             placeholder="Search employee or notes..."
-            value={filters.search ?? ''}
-            onChange={(e) => onChange({ search: e.target.value || undefined })}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             style={{ width: '100%', paddingLeft: '32px' }}
           />
           <svg

@@ -281,8 +281,8 @@ export default function ContractListPage() {
             )}
           </div>
         ) : (
-          <div className="app-table-wrapper">
-            <table className="app-table">
+          <div className="app-table-wrapper contracts-table-wrapper">
+            <table className="app-table contracts-table">
               <thead>
                 <tr>
                   <th
@@ -322,7 +322,7 @@ export default function ContractListPage() {
                   >
                     Status {renderSortIndicator('status')}
                   </th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th className="contracts-actions-column">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -373,7 +373,7 @@ export default function ContractListPage() {
                     <td>
                       <ActiveContractBadge status={c.status} />
                     </td>
-                    <td style={{ textAlign: 'right' }}>
+                    <td className="contracts-actions-column">
                       <button
                         type="button"
                         onClick={() => navigate(`/contracts/${c.id}`)}

@@ -27,13 +27,11 @@ export async function getActiveContract(
 }
 
 export async function createContract(data: Record<string, unknown>): Promise<Contract> {
-  if (data.status === 'Running') {
-    await checkOverlap(
-      data.employeeId as string,
-      data.startDate as string,
-      (data.endDate as string | null) ?? null
-    );
-  }
+  await checkOverlap(
+    data.employeeId as string,
+    data.startDate as string,
+    (data.endDate as string | null) ?? null
+  );
   return repo.create(data);
 }
 
@@ -47,9 +45,7 @@ export async function updateContract(
   const newStartDate = (data.startDate ?? existing.startDate) as string;
   const newEndDate   = ('endDate' in data ? data.endDate : existing.endDate) as string | null;
 
-  if (newStatus === 'Running') {
-    await checkOverlap(existing.employeeId, newStartDate, newEndDate, id);
-  }
+  await checkOverlap(existing.employeeId, newStartDate, newEndDate, id);
 
   return repo.update(id, data);
 }
@@ -62,8 +58,8 @@ async function checkOverlap(
   endDate: string | null,
   excludeId?: string
 ): Promise<void> {
-  const overlapping = await repo.findOverlappingRunning(employeeId, startDate, endDate, excludeId);
+  const overlapping = await repo.findOverlapping(employeeId, startDate, endDate, excludeId);
   if (overlapping.length > 0) {
-    throw new AppError(409, 'Employee already has an overlapping Running contract for this period');
+    throw new AppError(409, 'Employee already has another contract overlapping this period');
   }
 }

@@ -4,6 +4,8 @@ import { useSchedule } from '../hooks/useSchedules';
 import { createSchedule, updateSchedule } from '../services/working-schedules.service';
 import WeeklyPatternEditor, { computeWeeklyHours } from '../components/WeeklyPatternEditor';
 import { DayPattern, DEFAULT_DAYS } from '../types';
+import { getEmployeeLookups } from '@/features/employees/services/employees.service';
+import { EmployeeLookups } from '@/features/employees/types/employee.types';
 
 export default function ScheduleFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,8 +18,15 @@ export default function ScheduleFormPage() {
   const [company, setCompany] = useState('');
   const [timezone, setTimezone] = useState('UTC');
   const [days, setDays] = useState<DayPattern[]>(DEFAULT_DAYS);
+  const [companies, setCompanies] = useState<EmployeeLookups['companies']>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getEmployeeLookups()
+      .then((lookups) => setCompanies(lookups.companies))
+      .catch(() => setError('Failed to load company options'));
+  }, []);
 
   useEffect(() => {
     if (fetched) {
@@ -120,13 +129,22 @@ export default function ScheduleFormPage() {
 
               <div className="app-form-group">
                 <label className="app-label">Company *</label>
-                <input
+                <select
                   className="app-input"
-                  placeholder="e.g. Acme Corp"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   required
-                />
+                >
+                  <option value="">-- Select Company --</option>
+                  {company && !companies.some((item) => item.name === company) && (
+                    <option value={company}>{company}</option>
+                  )}
+                  {companies.map((item) => (
+                    <option key={item.id} value={item.name}>
+                      {item.name} ({item.code})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="app-form-group">

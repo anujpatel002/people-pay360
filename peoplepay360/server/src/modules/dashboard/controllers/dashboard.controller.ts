@@ -10,6 +10,19 @@ import * as companyRepo from '../repositories/company.repository';
 import * as deptRepo from '../repositories/department.repository';
 import * as employmentTypeRepo from '../repositories/employment-type.repository';
 import { AlertStatus } from '../types/dashboard.types';
+import pool from '../../../database/connection/pool';
+import { toDateOnly } from '../../../shared/utils/date-only';
+import type { RowDataPacket } from 'mysql2';
+
+interface PeopleEventRow extends RowDataPacket {
+  id: string;
+  first_name: string;
+  last_name: string;
+  job_title: string | null;
+  hire_date: string | Date;
+  years_of_service: number;
+  anniversary_this_year: string | Date;
+}
 
 export async function getDashboard(req: RequestWithUser, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -88,11 +101,8 @@ export async function patchAlertStatus(req: RequestWithUser, res: Response, next
 
 export async function getPeopleEvents(req: RequestWithUser, res: Response, next: NextFunction): Promise<void> {
   try {
-    const pool = (await import('../../../database/connection/pool')).default;
-    const { RowDataPacket } = await import('mysql2');
-
     // Work anniversaries: hire_date month-day matches within next 30 days
-    const [rows] = await (pool as any).execute<any[]>(
+    const [rows] = await pool.execute<PeopleEventRow[]>(
       `SELECT
          id, first_name, last_name, job_title, department_id,
          hire_date,
@@ -108,13 +118,13 @@ export async function getPeopleEvents(req: RequestWithUser, res: Response, next:
     );
 
     res.status(200).json({
-      anniversaries: rows.map((r: any) => ({
+      anniversaries: rows.map((r) => ({
         id: r.id,
         name: `${r.first_name} ${r.last_name}`,
         jobTitle: r.job_title,
-        hireDate: r.hire_date,
-        yearsOfService: r.years_of_service,
-        anniversaryDate: r.anniversary_this_year,
+        hireDate: toDateOnly(r.hire_date),
+        yearsOfService: Number(r.years_of_service),
+        anniversaryDate: toDateOnly(r.anniversary_this_year),
       })),
     });
   } catch (err) {

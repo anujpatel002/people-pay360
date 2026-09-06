@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUsers, useDeactivateUser } from '../hooks/useUsers';
 import { UserRole } from '@/shared/types/api.types';
@@ -16,14 +16,23 @@ const ROLE_BADGES: Record<string, string> = {
 export default function UsersListPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [role, setRole] = useState('');
   const [status, setStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
   const [page, setPage] = useState(1);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const { data, isLoading, isError } = useUsers({
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     role: role || undefined,
     status: status !== 'all' ? status : undefined,
     sortBy,
@@ -55,6 +64,7 @@ export default function UsersListPage() {
 
   function clearFilters() {
     setSearch('');
+    setDebouncedSearch('');
     setRole('');
     setStatus('all');
     setSortBy('createdAt');
@@ -63,7 +73,7 @@ export default function UsersListPage() {
   }
 
   const hasActiveFilters = Boolean(
-    search || role || status !== 'all' || sortBy !== 'createdAt' || sortOrder !== 'DESC'
+    debouncedSearch || role || status !== 'all' || sortBy !== 'createdAt' || sortOrder !== 'DESC'
   );
 
   const totalPages = data ? Math.ceil(data.total / 20) : 1;

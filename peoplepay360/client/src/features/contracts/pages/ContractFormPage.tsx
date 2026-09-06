@@ -137,7 +137,7 @@ export default function ContractFormPage() {
     setLoading(true);
     setError(null);
     try {
-      const payload = { ...form, endDate: form.endDate || null, wage: Number(form.wage) };
+      const payload = { ...form, endDate: form.endDate || null, wage: parseFloat(form.wage.toString()) };
       if (isEdit && id) {
         await updateContract(id, payload);
       } else {
@@ -427,7 +427,7 @@ export default function ContractFormPage() {
                   </span>
                   <input
                     className="app-input"
-                    type="number"
+                    type="float"
                     min={0}
                     value={form.wage}
                     onChange={(e) => set('wage', e.target.value)}
@@ -692,13 +692,13 @@ export default function ContractFormPage() {
                       <tr style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
                         <td style={{ padding: '8px 14px', fontWeight: 700, width: '35%', color: '#475569' }}>Employee Name</td>
                         <td style={{ padding: '8px 14px', fontWeight: 700, color: '#0f172a' }}>
-                          {targetEmployee ? `${targetEmployee.firstName} ${targetEmployee.lastName}` : 'Designated Employee'}
+                          {selectedEmployee?.name || 'Designated Employee'}
                         </td>
                       </tr>
                       <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                         <td style={{ padding: '8px 14px', fontWeight: 700, color: '#475569' }}>Employee Number / ID</td>
                         <td style={{ padding: '8px 14px', color: '#0f172a' }}>
-                          {targetEmployee?.employeeNumber || form.employeeId || '—'}
+                          {selectedEmployee?.employeeNumber || form.employeeId || '—'}
                         </td>
                       </tr>
                       <tr style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
@@ -724,7 +724,7 @@ export default function ContractFormPage() {
                       <tr style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
                         <td style={{ padding: '8px 14px', fontWeight: 700, color: '#475569' }}>Salary Computation Matrix</td>
                         <td style={{ padding: '8px 14px', color: '#0f172a' }}>
-                          {lookups?.salaryStructures.find((s) => s.id === form.structureId)?.name || 'Standard Statutory Salary Structure'}
+                          {lookups?.structures.find((s) => s.id === form.structureId)?.name || 'Standard Statutory Salary Structure'}
                         </td>
                       </tr>
                       <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
@@ -769,7 +769,7 @@ export default function ContractFormPage() {
                   <div style={{ flex: 1 }}>
                     <div style={{ borderBottom: '1px solid #0f172a', minHeight: '40px', marginBottom: '6px' }}></div>
                     <strong style={{ display: 'block', fontSize: '12.5px', color: '#0f172a' }}>
-                      {targetEmployee ? `${targetEmployee.firstName} ${targetEmployee.lastName}` : 'Employee Acceptance'}
+                      {selectedEmployee?.name || 'Employee Acceptance'}
                     </strong>
                     <span style={{ fontSize: '11.5px', color: '#64748b' }}>Employee Signature & Date</span>
                   </div>

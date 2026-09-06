@@ -199,6 +199,23 @@ export async function findRequestById(id: string): Promise<TimeOffRequest | null
   return rows[0] ? toTimeOffRequest(rows[0]) : null;
 }
 
+export async function findOverlappingRequests(
+  employeeId: string,
+  startDate: string,
+  endDate: string
+): Promise<TimeOffRequest[]> {
+  const [rows] = await pool.execute<TimeOffRequestRow[]>(
+    `${REQ_SELECT}
+     WHERE r.employee_id = ?
+       AND r.status IN ('Draft', 'Confirmed', 'Approved')
+       AND r.start_date <= ?
+       AND r.end_date >= ?
+     ORDER BY r.start_date ASC`,
+    [employeeId, endDate, startDate] as any[]
+  );
+  return rows.map(toTimeOffRequest);
+}
+
 export async function createRequest(data: {
   employeeId: string; typeId: string; allocationId: string | null;
   startDate: string; endDate: string; days: number; reason?: string;

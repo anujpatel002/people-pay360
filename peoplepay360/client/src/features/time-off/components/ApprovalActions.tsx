@@ -13,7 +13,7 @@ export default function ApprovalActions({ requestId, status, onApprove, onRefuse
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  if (status !== 'Confirmed' && status !== 'Pending') return null;
+  if (status !== 'Draft' && status !== 'Confirmed' && status !== 'Pending') return null;
 
   const handleApprove = async () => {
     setLoading(true);

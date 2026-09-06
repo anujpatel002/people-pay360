@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStructures } from '../hooks/usePayrollConfig';
 import { deleteStructure } from '../services/payroll-config.service';
@@ -6,9 +6,14 @@ import { deleteStructure } from '../services/payroll-config.service';
 export default function SalaryStructureListPage() {
   const navigate = useNavigate();
   const [search, setSearch]     = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isActive, setIsActive] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   const { data, total, loading, error, refetch } = useStructures({
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     isActive: isActive === '' ? undefined : isActive === 'true',
   });
 

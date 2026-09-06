@@ -90,7 +90,7 @@ export async function findActiveForPeriod(
   return rows.map(toContract);
 }
 
-export async function findOverlappingRunning(
+export async function findOverlapping(
   employeeId: string,
   startDate: string,
   endDate: string | null,
@@ -100,7 +100,7 @@ export async function findOverlappingRunning(
   let sql = `
     SELECT c.* FROM contracts c
     WHERE c.employee_id = ?
-      AND c.status = 'Running'
+      AND c.status <> 'Cancelled'
       AND c.start_date <= ?
       AND (c.end_date IS NULL OR c.end_date >= ?)
   `;

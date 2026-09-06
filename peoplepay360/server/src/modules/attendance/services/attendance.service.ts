@@ -250,12 +250,24 @@ export async function bulkImport(
         : null;
 
       const schedule = await resolveScheduleForEmployee(row.employeeId, row.date);
-      const calculation = await calculateWorkedHours(checkInFull, checkOutFull, schedule);
-      const status = detectAttendanceStatus(calculation, schedule, checkInFull);
+      const calculation = calculateWorkedHours({
+        checkIn: checkInFull,
+        checkOut: checkOutFull,
+        dayConfig: schedule.dayConfig,
+        expectedMinutes: schedule.expectedMinutes,
+      });
+      const status = detectAttendanceStatus({
+        checkIn: checkInFull,
+        checkOut: checkOutFull,
+        dayConfig: schedule.dayConfig,
+        workedMinutes: calculation.workedMinutes,
+        overtimeMinutes: calculation.overtimeMinutes,
+        isManualEntry: true,
+      });
 
       await attendanceRepo.create({
         employeeId: row.employeeId,
-        scheduleId: schedule?.id ?? null,
+        scheduleId: schedule.scheduleId,
         date: row.date,
         checkIn: checkInFull,
         checkOut: checkOutFull,
