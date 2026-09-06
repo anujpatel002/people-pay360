@@ -122,11 +122,12 @@ export default function EmployeeHistoryTab({ employeeId }: { employeeId: string 
               >
                 <div>
                   <div style={{ fontWeight: 600, fontSize: '13.5px', color: '#0f172a' }}>
-                    Payslip — {p.period_start} to {p.period_end}
+                    Payslip #{p.id.slice(-8).toUpperCase()}
                   </div>
                   <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                     Net: <strong style={{ color: '#16a34a' }}>{formatCurrency(p.net)}</strong>
                     {' · '}Gross: {formatCurrency(p.gross)}
+                    {p.worked_days ? ` · ${p.worked_days} days worked` : ''}
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
